@@ -1,0 +1,2633 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>👾 Invasores de la Física 🚀 (Inicio Mejorado)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+    <style>
+        /* --- Variables de Color CSS (Paleta Ajustada) --- */
+        :root {
+            --bg-dark: #18181b; /* zinc-900 */
+            --container-bg: #27272a; /* zinc-800 */
+            --ui-bar-bg: #1f1f23; /* Un poco más oscuro para la barra de UI */
+            --modal-bg: #2a2a2e; /* Ligeramente más claro para modales */
+            --canvas-bg: #000000; /* Fondo negro para el juego */
+
+            --text-light: #f4f4f5; /* zinc-100 */
+            --text-muted: #a1a1aa; /* zinc-400 */
+            --accent-green: #39ff14; /* Verde neón */
+            --accent-blue: #00ffff; /* Cyan neón */
+            --accent-pink: #ff00ff; /* Magenta neón */
+            --accent-red: #ff1f1f; /* Rojo neón */
+            --accent-yellow: #ffff00; /* Amarillo neón */
+            --border-color: #52525b; /* zinc-600 */
+            --control-bg: #3f3f46; /* zinc-700 */
+            --control-hover-bg: #52525b; /* zinc-600 */
+            --button-secondary-bg: #52525b; /* zinc-600 */
+            --button-secondary-hover-bg: #71717a; /* zinc-500 */
+            --global-btn-bg: #3f3f46; /* zinc-700 */
+            --global-btn-hover-bg: #52525b; /* zinc-600 */
+            --paused-overlay-bg: rgba(10, 10, 10, 0.7);
+
+            /* Colores específicos para balas/items */
+            --player-bullet-color: var(--accent-green);
+            --invader-bullet-color: var(--accent-red);
+            --item-life-color: var(--accent-green);
+            --item-bomb-color: var(--accent-red);
+            --item-score-color: var(--accent-yellow);
+            --item-question-color: var(--accent-blue);
+            --item-fastshoot-color: var(--accent-pink);
+            --item-shield-color: var(--accent-blue);
+            --hit-flash-color: #ffffff;
+
+            /* Nuevos colores para progreso y estrellas */
+            --progress-bar-bg: #333;
+            --progress-bar-fill: var(--accent-green);
+            --star-filled-color: var(--accent-yellow);
+            --star-empty-color: var(--text-muted);
+        }
+
+        /* Estilos generales */
+        body { background-color: var(--bg-dark); color: var(--text-light); font-family: 'Press Start 2P', cursive; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 0.5rem; overflow: hidden; touch-action: manipulation; image-rendering: pixelated; }
+        .container { width: 100%; max-width: 750px; margin: auto; display: flex; flex-direction: column; align-items: center; position: relative; border: 3px solid var(--accent-blue); border-radius: 10px; background-color: var(--container-bg); padding: 1.2rem; box-shadow: 0 0 25px var(--accent-blue), inset 0 0 10px rgba(0, 255, 255, 0.3); }
+
+        /* Controles Globales */
+        #global-controls { display: flex; justify-content: center; gap: 1rem; width: 100%; max-width: 700px; margin-bottom: 1rem; }
+        .global-btn { background-color: var(--global-btn-bg); color: var(--text-light); border: 2px solid var(--border-color); border-radius: 5px; padding: 0.5rem 1rem; font-size: 0.75rem; font-family: 'Press Start 2P', cursive; cursor: pointer; transition: background-color 0.15s, transform 0.1s, box-shadow 0.15s; box-shadow: 2px 2px 0px var(--border-color); text-transform: uppercase; display: flex; align-items: center; gap: 0.3rem;}
+        .global-btn:hover:not(:disabled) { background-color: var(--global-btn-hover-bg); box-shadow: 2px 2px 5px var(--accent-blue); }
+        .global-btn:active:not(:disabled) { transform: translate(1px, 1px); box-shadow: 1px 1px 0px var(--border-color); }
+        .global-btn:disabled { opacity: 0.6; cursor: not-allowed; background-color: var(--control-bg); box-shadow: 1px 1px 0px #111; transform: translate(1px, 1px); }
+
+        /* Mensaje de Pausa */
+        #pause-message { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: var(--paused-overlay-bg); color: var(--accent-yellow); padding: 2rem 2.5rem; border-radius: 10px; font-size: 1.8rem; text-align: center; z-index: 1005; display: none; border: 3px solid var(--accent-yellow); box-shadow: 0 0 15px var(--accent-yellow); text-shadow: 0 0 5px #000; }
+
+        /* Canvas del Juego */
+        #gameCanvas { background-color: var(--canvas-bg); display: block; width: 100%; max-width: 700px; height: auto; aspect-ratio: 4 / 3; border: 3px solid var(--accent-pink); border-radius: 6px; margin-bottom: 1rem; position: relative; cursor: none; box-shadow: 0 0 10px var(--accent-pink); }
+
+        /* Barra de UI (Estadísticas) */
+        #ui-bar { display: flex; justify-content: space-around; align-items: center; width: 100%; max-width: 700px; padding: 0.6rem 1rem; background-color: var(--ui-bar-bg); border: 2px solid var(--border-color); border-radius: 6px; margin-bottom: 1rem; font-size: 0.7rem; text-transform: uppercase; gap: 0.5rem; flex-wrap: wrap; box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
+        .stat { display: flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.4rem; background-color: rgba(255,255,255,0.05); border-radius: 4px;}
+        .stat span { color: var(--accent-yellow); margin-left: 0.3rem; font-weight: bold; }
+        #lives span { color: var(--accent-green); }
+        #level span { color: var(--accent-pink); }
+        #questions-answered-ui { color: var(--accent-blue) !important; }
+        #questions-target-ui { color: var(--accent-blue) !important; }
+        #questions-remaining-ui { color: var(--accent-yellow) !important; }
+
+        /* Barra de Progreso Preguntas */
+        #question-progress-bar-container { width: 100%; background-color: var(--progress-bar-bg); border-radius: 4px; height: 10px; margin-top: 0.3rem; border: 1px solid var(--border-color); overflow: hidden; }
+        #question-progress-bar { width: 0%; height: 100%; background-color: var(--progress-bar-fill); transition: width 0.3s ease-in-out; }
+        .stat-questions { flex-basis: 100%; text-align: center; margin-top: 0.5rem;} /* Para que ocupe toda la línea */
+
+
+        /* Controles Táctiles */
+        #mobile-controls { display: none; justify-content: space-between; align-items: center; width: 95%; max-width: 600px; margin-top: 1rem; gap: 1rem; }
+        .control-btn { background-color: var(--control-bg); color: var(--text-light); border: 2px solid var(--border-color); border-radius: 50%; width: 65px; height: 65px; font-size: 2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0px var(--border-color); transition: background-color 0.1s, transform 0.1s, box-shadow 0.1s; user-select: none; -webkit-tap-highlight-color: transparent; font-family: 'Arial', sans-serif; }
+        .control-btn.active-touch { background-color: var(--control-hover-bg); transform: translate(2px, 2px); box-shadow: 1px 1px 0px var(--border-color); }
+        #shoot-btn { background-color: var(--accent-red); color: var(--bg-dark); width: 80px; height: 80px; border-color: #ff5555; box-shadow: 4px 4px 0px #aa0000; font-size: 2.5rem; }
+        #shoot-btn.active-touch { background-color: #cc0000; box-shadow: 2px 2px 0px #aa0000; transform: translate(2px, 2px); }
+
+        /* Modales */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(10, 10, 10, 0.85); display: none; align-items: center; justify-content: center; z-index: 1010; padding: 1rem; font-family: 'Press Start 2P', cursive; backdrop-filter: blur(3px); }
+        .modal-overlay.visible { display: flex; animation: fadeInModal 0.3s ease-out; }
+        @keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
+        .modal-content { background-color: var(--modal-bg); padding: 1.8rem 2.2rem; border-radius: 8px; width: 95%; max-width: 600px; box-shadow: 0 0 25px rgba(0, 0, 0, 0.6); color: var(--text-light); border: 3px solid var(--border-color); text-align: center; animation: slideInModal 0.3s ease-out; }
+        @keyframes slideInModal { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .modal-title { font-size: 1.4rem; color: var(--accent-yellow); margin-bottom: 1.8rem; text-transform: uppercase; text-shadow: 1px 1px 3px #000; }
+        .modal-body p { margin-bottom: 1.2rem; line-height: 1.7; font-size: 0.85rem; text-align: left; }
+        .modal-body ul { list-style: none; padding-left: 0.8rem; margin-bottom: 1.2rem; text-align: left; }
+        .modal-body li { margin-bottom: 0.6rem; font-size: 0.85rem; }
+        .modal-body li strong { color: var(--accent-yellow); margin-right: 0.5rem; }
+
+        /* Estrellas de Calificación */
+        .rating-stars { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .rating-stars .star-filled { color: var(--star-filled-color); }
+        .rating-stars .star-empty { color: var(--star-empty-color); }
+
+        .final-screen .stat-final { font-size: 0.85rem; margin-bottom: 0.8rem; text-align: left; color: var(--text-muted); }
+        .final-screen .stat-final strong { color: var(--text-light); margin-left: 0.5rem; }
+        .final-screen #high-score-display, .final-screen #high-score-display-complete { margin-top: 1.2rem; font-size: 0.8rem; color: var(--accent-blue); text-align: center; }
+        .final-screen #fact-display, .final-screen #fact-display-complete { margin-top: 1.2rem; font-size: 0.75rem; color: var(--accent-pink); font-style: italic; text-align: left; line-height: 1.5; padding: 0.5rem; background-color: rgba(255,0,255,0.05); border-left: 3px solid var(--accent-pink); border-radius: 4px;}
+        .final-screen .play-again-button, .final-screen #next-level-button { margin-top: 1.8rem; }
+
+        .modal-body button, .difficulty-btn, #start-button, #help-button, #close-help-button { background-color: var(--control-bg); color: var(--text-light); border: 2px solid var(--border-color); border-radius: 5px; padding: 0.7rem 1.2rem; font-size: 0.85rem; cursor: pointer; box-shadow: 2px 2px 0px var(--border-color); transition: background-color 0.15s, transform 0.1s, box-shadow 0.15s; text-transform: uppercase; margin: 0.5rem 0.3rem; font-family: 'Press Start 2P', cursive; }
+        .modal-body button:hover, .difficulty-btn:hover, #start-button:hover, #help-button:hover, #close-help-button:hover { background-color: var(--control-hover-bg); box-shadow: 2px 2px 5px var(--accent-blue); }
+        .modal-body button:active, .difficulty-btn:active, #start-button:active, #help-button:active, #close-help-button:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0px var(--border-color); }
+
+        button.option-btn { display: block; width: 100%; text-align: left; margin-bottom: 0.6rem; background-color: var(--accent-blue) !important; color: var(--bg-dark) !important; border-color: #00aaaa !important; box-shadow: 2px 2px 0px #008888 !important; padding: 0.8rem 1rem; font-size: 0.8rem; }
+        button.option-btn:hover { background-color: #00dddd !important; }
+        button.option-btn:active { box-shadow: 1px 1px 0px #008888 !important; transform: translate(1px,1px); }
+        button.option-btn:disabled { background-color: var(--border-color) !important; color: #888 !important; opacity: 0.7; cursor: not-allowed; border-color: #222 !important; box-shadow: 1px 1px 0px #222 !important; transform: translate(1px, 1px); }
+        button.option-btn.correct-option { background-color: var(--accent-green) !important; border-color: #29cc04 !important; box-shadow: 1px 1px 0px #199904 !important; color: var(--bg-dark) !important; }
+        button.option-btn.incorrect-option { background-color: var(--accent-red) !important; border-color: #cc0000 !important; box-shadow: 1px 1px 0px #aa0000 !important; color: var(--bg-dark) !important; }
+
+        .feedback { margin-top: 1.5rem; padding: 1rem; border-radius: 6px; font-size: 0.8rem; text-align: left; border: 2px solid; }
+        .feedback.correct { border-color: var(--accent-green); background-color: rgba(57, 255, 20, 0.15); box-shadow: 0 0 10px rgba(57, 255, 20, 0.3); }
+        .feedback.incorrect { border-color: var(--accent-red); background-color: rgba(255, 31, 31, 0.15); box-shadow: 0 0 10px rgba(255, 31, 31, 0.3); }
+        .feedback strong { display: block; margin-bottom: 0.5rem; font-size: 0.95rem; text-transform: uppercase; }
+        .feedback .correct-answer-label { color: var(--accent-yellow); font-weight: bold; }
+        .feedback .explanation-text { margin-top: 0.8rem; font-size: 0.75rem; color: #ddd; line-height: 1.5; }
+        #accept-feedback-btn { background-color: var(--accent-yellow) !important; color: var(--bg-dark) !important; border-color: #cccc00 !important; box-shadow: 2px 2px 0px #aaaa00 !important; margin-top: 1rem; }
+        #accept-feedback-btn:hover { background-color: #dddd00 !important; }
+        #accept-feedback-btn:active { box-shadow: 1px 1px 0px #aaaa00 !important; transform: translate(1px, 1px); }
+
+        /* Modal Specific Borders/Shadows */
+        #question-modal .modal-content { border-color: var(--accent-blue); box-shadow: 0 0 20px var(--accent-blue); }
+        #game-over-modal .modal-content { border-color: var(--accent-red); box-shadow: 0 0 20px var(--accent-red); }
+        #level-complete-modal .modal-content { border-color: var(--accent-green); box-shadow: 0 0 20px var(--accent-green); }
+        #help-modal .modal-content { border-color: var(--accent-yellow); box-shadow: 0 0 20px var(--accent-yellow); }
+        #help-modal .modal-title { color: var(--accent-yellow); }
+        #close-help-button { background-color: var(--accent-yellow); color: var(--bg-dark); border-color: #cccc00; box-shadow: 2px 2px 0px #aaaa00;}
+        #close-help-button:hover { background-color: #dddd00; }
+        #close-help-button:active { box-shadow: 1px 1px 0px #aaaa00; transform: translate(1px, 1px); }
+        #restart-button-complete { background-color: var(--button-secondary-bg) !important; border-color: var(--button-secondary-hover-bg) !important; box-shadow: 2px 2px 0px var(--button-secondary-hover-bg) !important; }
+        #restart-button-complete:hover { background-color: var(--button-secondary-hover-bg) !important; }
+
+        /* Pantalla de Inicio y Selección de Dificultad - MODIFICADO */
+        #start-screen {
+            text-align: center;
+            background: linear-gradient(145deg, #3a3a4a, #1e1e2f);
+            padding: 1.5rem; /* Reducido */
+            border-radius: 10px;
+            border: 3px solid var(--accent-green);
+            box-shadow: inset 0 0 15px rgba(57, 255, 20, 0.3), 0 5px 10px rgba(0,0,0,0.5);
+            width: 90%;
+            max-width: 650px; /* Ligeramente más ancho */
+            display: flex; /* Para mejor control de hijos si es necesario */
+            flex-direction: column;
+            align-items: center;
+        }
+        #start-screen h1 {
+            font-size: 1.6rem; /* Reducido */
+            color: var(--accent-green);
+            text-shadow: 0 0 8px var(--accent-green), 0 0 15px var(--accent-green);
+            border-bottom: 3px dashed var(--accent-green);
+            padding-bottom: 0.8rem; /* Reducido */
+            margin-bottom: 1.2rem; /* Reducido */
+            width: 100%; /* Para que el border-bottom ocupe todo el ancho */
+        }
+        #start-screen p.intro-text {
+            font-size: 0.8rem; /* Reducido */
+            color: #ddd;
+            margin-bottom: 1.2rem; /* Reducido */
+            line-height: 1.5; /* Ajustado */
+            max-width: 500px; /* Para que no sea demasiado ancho */
+        }
+        #difficulty-selection {
+            margin: 1.5rem 0; /* Reducido */
+            width: 100%;
+        }
+        #difficulty-selection label {
+            font-size: 0.9rem; /* Reducido */
+            color: var(--accent-yellow);
+            margin-bottom: 0.8rem; /* Reducido */
+            display: block;
+            text-shadow: 1px 1px 2px #000;
+        }
+        #difficulty-selection .difficulty-options {
+            display: flex;
+            justify-content: center;
+            gap: 0.8rem; /* Ligeramente reducido */
+            flex-wrap: wrap;
+        }
+        .difficulty-btn {
+            flex-grow: 1;
+            min-width: 120px; /* Reducido */
+            padding: 0.6rem 1rem; /* Reducido */
+            font-size: 0.75rem; /* Reducido */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.4rem; /* Reducido */
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .difficulty-btn .difficulty-icon { font-size: 1.4rem; margin-bottom: 0.2rem; } /* Ajustado */
+        .difficulty-btn.selected { background-color: var(--accent-blue); color: var(--bg-dark); border-color: #0088cc; box-shadow: 0 0 10px var(--accent-blue), inset 0 0 5px rgba(0,0,0,0.3); transform: scale(1.05); }
+        .difficulty-btn:not(.selected):hover { transform: translateY(-3px); box-shadow: 0 3px 8px rgba(0,0,0,0.4); }
+
+        /* Contenedor para botones de acción (Iniciar, Instrucciones) */
+        .start-actions-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem; /* Espacio entre botones */
+            margin-top: 1.5rem; /* Reducido */
+            width: 100%;
+        }
+
+        #start-button, #help-button {
+            font-size: 0.9rem; /* Reducido */
+            padding: 0.7rem 1.4rem; /* Reducido */
+            margin-top: 0; /* El margen es manejado por el contenedor */
+        }
+        #start-button { background-color: var(--accent-green); color: var(--bg-dark); border-color: #29cc04; box-shadow: 3px 3px 0px #199904; }
+        #start-button:hover { background-color: #2fdd0f; }
+        #start-button:active { box-shadow: 1px 1px 0px #199904; transform: translate(2px, 2px); }
+
+        #help-button { background-color: var(--accent-blue); color: var(--bg-dark); border-color: #00aaaa; box-shadow: 2px 2px 0px #008888; }
+        #help-button:hover { background-color: #00cccc; }
+        #help-button:active { box-shadow: 1px 1px 0px #008888; transform: translate(1px, 1px); }
+
+        .start-screen-hint {
+            font-size: 0.7rem; /* Reducido */
+            color: var(--text-muted);
+            margin-top: 1rem; /* Reducido */
+        }
+
+
+        /* Footer */
+        footer { margin-top: 2rem; font-size: 0.75rem; text-align: center; font-style: italic; padding: 1rem; color: #fff; background: linear-gradient(270deg, var(--accent-blue), var(--accent-pink), var(--accent-yellow), var(--accent-green), var(--accent-blue)); background-size: 800% 800%; border-radius: 8px; animation: gradientShift 12s ease infinite; box-shadow: 0 0 20px rgba(0, 255, 255, 0.6); }
+        @keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        /* Media Queries para Responsividad */
+        @media (max-width: 768px) {
+            .container { padding: 0.8rem; border-width: 2px; }
+            #ui-bar { font-size: 0.65rem; padding: 0.5rem; gap: 0.3rem; justify-content: space-evenly;}
+            .stat {padding: 0.1rem 0.3rem;}
+            #start-screen { padding: 1.2rem; max-width: 95%;} /* Más compacto en móviles */
+            #start-screen h1 { font-size: 1.4rem;}
+            #start-screen p.intro-text { font-size: 0.75rem;}
+            .difficulty-btn { min-width: 100px; padding: 0.5rem 0.8rem; font-size: 0.7rem;}
+            .start-actions-container { flex-direction: column; gap: 0.8rem; margin-top: 1.2rem;} /* Apilar botones en pantallas pequeñas */
+            #start-button, #help-button { font-size: 0.8rem; padding: 0.6rem 1.2rem; width: 80%; max-width: 200px;}
+        }
+        @media (max-width: 640px) {
+            .modal-content { padding: 1.2rem 1.5rem; }
+            .modal-title { font-size: 1.2rem; margin-bottom: 1.2rem;}
+            .modal-body p, .modal-body li { font-size: 0.75rem; }
+            .modal-body button, .difficulty-btn, #start-button, #help-button, #close-help-button { font-size: 0.75rem; padding: 0.6rem 1rem;}
+            #start-screen h1 { font-size: 1.3rem; padding-bottom: 0.8rem; margin-bottom: 1.5rem;}
+            #difficulty-selection label { font-size: 0.9rem; }
+            .control-btn { width: 55px; height: 55px; font-size: 1.6rem; }
+            #shoot-btn { width: 70px; height: 70px; font-size: 2rem; }
+            #global-controls { gap: 0.5rem; }
+            .global-btn { padding: 0.4rem 0.8rem; font-size: 0.65rem;}
+            #pause-message { font-size: 1.5rem; padding: 1.5rem 2rem;}
+            .final-screen .stat-final { font-size: 0.75rem; }
+            .final-screen #high-score-display, .final-screen #fact-display { font-size: 0.7rem;}
+        }
+        @media (hover: none) and (pointer: coarse), (max-width: 768px) { /* Mejor detección para móviles */
+            #mobile-controls { display: flex; }
+        }
+    </style>
+
+</head>
+<body>
+    <div id="global-controls">
+        <button id="pause-btn" class="global-btn" disabled>⏸️ Pausa</button>
+        <button id="restart-btn-global" class="global-btn" disabled>🔄 Reiniciar</button>
+        <button id="mute-btn" class="global-btn">🔈 Sonido</button>
+    </div>
+
+    <div class="container">
+        <div id="start-screen">
+            <h1>👾 Invasores de la Física 🚀</h1>
+            <p class="intro-text">¡Esquiva balas 💥, recoge ítems 💎 y demuestra tu conocimiento en física respondiendo preguntas! 🧠</p>
+            <div id="difficulty-selection">
+                <label>🎓 Selecciona la Dificultad (Preguntas por Nivel):</label>
+                <div class="difficulty-options">
+                    <button class="difficulty-btn" data-difficulty="easy">
+                        <span class="difficulty-icon">⚛️</span>Fácil (10)
+                    </button>
+                    <button class="difficulty-btn selected" data-difficulty="medium">
+                        <span class="difficulty-icon">🧪</span>Medio (15)
+                    </button>
+                    <button class="difficulty-btn" data-difficulty="hard">
+                        <span class="difficulty-icon">🔬</span>Difícil (20)
+                    </button>
+                </div>
+            </div>
+            <div class="start-actions-container">
+                <button id="start-button">▶️ Iniciar Juego</button>
+                <button id="help-button">ℹ️ Instrucciones</button>
+            </div>
+            <p class="start-screen-hint">(Usa ← → / Espacio en teclado ⌨️ o los botones en pantalla 📱)</p>
+        </div>
+
+        <div id="game-elements" style="display: none;">
+            <div id="ui-bar">
+                <div class="stat">🎯 Score: <span id="score">0</span></div>
+                <div class="stat" id="lives">❤️ Vidas: <span >3</span></div>
+                <div class="stat" id="level">🌟 Nivel: <span >1</span></div>
+                <div class="stat stat-questions">🧠 P. Nivel: <span id="questions-answered-ui">0</span>/<span id="questions-target-ui">0</span> <br> ⏳ Restantes: <span id="questions-remaining-ui">0</span>
+                    <div id="question-progress-bar-container"><div id="question-progress-bar"></div></div>
+                </div>
+            </div>
+            <div id="pause-message">⏸️ PAUSA ⏸️</div>
+            <canvas id="gameCanvas"></canvas>
+            <div id="mobile-controls">
+                 <button id="left-btn" class="control-btn" aria-label="Mover Izquierda">⬅️</button>
+                 <button id="shoot-btn" class="control-btn" aria-label="Disparar">🔥</button>
+                 <button id="right-btn" class="control-btn" aria-label="Mover Derecha">➡️</button>
+            </div>
+        </div>
+
+        <div id="question-modal" class="modal-overlay">
+             <div class="modal-content">
+                 <h2 class="modal-title">💡 ¡Pregunta de Física! 💡</h2>
+                 <div class="modal-body">
+                     <p id="question-counter-modal" style="font-weight:bold; color: var(--accent-blue); text-align:center;">Pregunta Nivel: X/Y</p>
+                     <p id="question-text" style="font-size: 0.9rem; min-height: 50px; background-color: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 4px;">Aquí va la pregunta...</p>
+                     <div id="options-container" style="margin-top:1rem;"></div>
+                     <div id="feedback-container" class="feedback" style="display: none;">
+                         <div id="feedback-content"></div>
+                         <button id="accept-feedback-btn" style="display: none;">✔️ Entendido</button>
+                     </div>
+                 </div>
+             </div>
+        </div>
+
+        <div id="game-over-modal" class="modal-overlay">
+             <div id="game-over-screen" class="modal-content final-screen">
+                 <h2 class="modal-title">☠️ Game Over ☠️</h2>
+                 <div class="modal-body">
+                     <p id="final-message">Los invasores han ganado...</p>
+                     <div class="stat-final">🎯 Score Final: <strong id="final-score">0</strong></div>
+                     <div class="stat-final">🌟 Nivel Alcanzado: <strong id="final-level">1</strong></div>
+                     <div class="stat-final">🎓 Dificultad: <strong id="final-difficulty">Medio</strong></div>
+                     <div class="stat-final">🧠 Preguntas Correctas (Total): <strong id="final-questions-correct-gameover">0</strong> / <strong id="final-questions-answered-gameover">0</strong></div>
+                     <div class="stat-final">🏅 Calificación Juego: <span id="final-rating-gameover-stars" class="rating-stars"></span> (<strong id="final-rating-gameover-text" class="rating-display">0/5</strong>)</div>
+                     <div id="high-score-display">🏆 Mejor Score (<span id="high-score-difficulty-gameover">Medio</span>): <strong id="high-score-gameover">0</strong></div>
+                     <div id="fact-display"><i>🔭 Dato Curioso:</i> <span id="fact-text-gameover">...</span></div>
+                     <button id="restart-button-gameover" class="play-again-button">🔄 Jugar de Nuevo</button>
+                 </div>
+             </div>
+        </div>
+
+        <div id="level-complete-modal" class="modal-overlay">
+             <div id="level-complete-screen" class="modal-content final-screen">
+                  <h2 class="modal-title">🎉 ¡Nivel Superado! 🎉</h2>
+                  <div class="modal-body">
+                      <p id="complete-message">¡Has detenido la invasión... por ahora!</p>
+                      <div class="stat-final">🎯 Score Acumulado: <strong id="complete-score">0</strong></div>
+                      <div class="stat-final">🌟 Nivel Completado: <strong id="complete-level">1</strong></div>
+                      <div class="stat-final">🎓 Dificultad: <strong id="complete-difficulty">Medio</strong></div>
+                      <div class="stat-final">🧠 Preguntas Correctas (Nivel): <strong id="complete-questions-correct">0</strong> / <strong id="complete-questions-answered">0</strong></div>
+                      <div class="stat-final">🏅 Calificación Nivel: <span id="complete-rating-stars" class="rating-stars"></span> (<strong id="complete-rating-text" class="rating-display">0/5</strong>)</div>
+                      <div id="high-score-display-complete">🏆 Mejor Score (<span id="high-score-difficulty-complete">Medio</span>): <strong id="high-score-complete">0</strong></div>
+                      <div id="fact-display-complete"><i>🔭 Dato Curioso:</i> <span id="fact-text-complete">...</span></div>
+                      <button id="next-level-button">➡️ Siguiente Nivel</button>
+                      <button id="restart-button-complete" class="play-again-button">🔄 Reiniciar Juego</button>
+                  </div>
+             </div>
+        </div>
+
+        <div id="help-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h2 class="modal-title">ℹ️ Instrucciones del Juego ℹ️</h2>
+                <div class="modal-body">
+                    <p>¡Defiende la Tierra 🌍 de los Invasores de la Física!</p>
+                    <ul>
+                        <li><strong>🕹️ Movimiento:</strong> Usa las teclas <strong>←</strong> y <strong>→</strong> o los botones en pantalla para mover tu nave 🚀.</li>
+                        <li><strong>💥 Disparo:</strong> Presiona la <strong>Barra Espaciadora</strong> o el botón 🔥 para disparar.</li>
+                        <li><strong>🎯 Objetivo:</strong> Elimina a todos los invasores 👾 y responde las preguntas ❓ requeridas para pasar de nivel.</li>
+                        <li><strong>🧠 Preguntas:</strong> Recoge los ítems ❓ para pausar el juego y responder una pregunta de física. ¡Responder correctamente te da puntos extra y cuenta para el objetivo del nivel!</li>
+                        <li><strong>🌊 Oleadas:</strong> Si eliminas a todos los invasores antes de completar las preguntas, ¡aparecerá una nueva oleada!</li>
+                        <li><strong>💎 Otros Ítems:</strong>
+                            <ul>
+                                <li>💚: Vida extra</li>
+                                <li>💣: Elimina todos los invasores en pantalla (¡no da puntos!)</li>
+                                <li>💰: Puntos extra</li>
+                                <li>⚡: Disparo rápido temporal</li>
+                                <li>🛡️: Escudo temporal</li>
+                            </ul>
+                        </li>
+                        <li><strong>⏸️ Pausa:</strong> Usa el botón 'Pausa' global.</li>
+                        <li><strong>🔄 Reiniciar:</strong> Usa el botón 'Reiniciar' global.</li>
+                        <li><strong>🔈 Sonido:</strong> Usa el botón 'Sonido' global para activar/desactivar.</li>
+                    </ul>
+                    <button id="close-help-button">👍 ¡Entendido!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        Desarrollado con ✨ por Msc: Néstor Fabio Montoya Palacios (Versión Mejorada por IA)
+    </footer>
+
+    <script>
+        // --- Polyfill para requestAnimationFrame ---
+        window.requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || function(callback) {
+            window.setTimeout(callback, 1000 / 60);
+        };
+
+        // --- Constantes y Variables Globales ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Elementos UI
+        const scoreElement = document.getElementById('score');
+        const livesElement = document.getElementById('lives').querySelector('span');
+        const levelElement = document.getElementById('level').querySelector('span');
+        const questionsAnsweredUI = document.getElementById('questions-answered-ui');
+        const questionsTargetUI = document.getElementById('questions-target-ui');
+        const questionsRemainingUI = document.getElementById('questions-remaining-ui'); // Nuevo
+        const questionProgressBar = document.getElementById('question-progress-bar'); // Nuevo
+
+        // Mensajes y Pantallas
+        const pauseMessage = document.getElementById('pause-message');
+        const startScreen = document.getElementById('start-screen');
+        const gameElements = document.getElementById('game-elements');
+
+        // Botones Globales
+        const pauseBtn = document.getElementById('pause-btn');
+        const restartBtnGlobal = document.getElementById('restart-btn-global');
+        const muteBtn = document.getElementById('mute-btn'); // Nuevo
+
+        // Controles Móviles
+        const mobileControls = document.getElementById('mobile-controls');
+        const leftBtn = document.getElementById('left-btn');
+        const rightBtn = document.getElementById('right-btn');
+        const shootBtn = document.getElementById('shoot-btn');
+
+        // Modales
+        const questionModal = document.getElementById('question-modal');
+        const gameOverModal = document.getElementById('game-over-modal');
+        const levelCompleteModal = document.getElementById('level-complete-modal');
+        const helpModal = document.getElementById('help-modal');
+
+        // Sonidos (usando Tone.js)
+        let soundsEnabled = true; // Sonido activado por defecto
+        let audioInitialized = false; // Para controlar la primera inicialización de Tone.js
+        let playerShootSynth, invaderShootSynth, explosionSynth, itemPickupSynth, questionSynth, correctSynth, incorrectSynth, waveClearSynth;
+
+        function initializeSounds() {
+            if (typeof Tone !== 'undefined' && !audioInitialized) {
+                try {
+                    // Crear sintetizadores
+                    playerShootSynth = new Tone.Synth({ oscillator: { type: "square" }, envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 } }).toDestination();
+                    invaderShootSynth = new Tone.Synth({ oscillator: { type: "sawtooth" }, envelope: { attack: 0.01, decay: 0.15, sustain: 0, release: 0.1 } }).toDestination();
+                    explosionSynth = new Tone.NoiseSynth({ noise: { type: "white" }, envelope: { attack: 0.005, decay: 0.1, sustain: 0 } }).toDestination();
+                    itemPickupSynth = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.1 } }).toDestination();
+                    questionSynth = new Tone.Synth({ oscillator: { type: "sine" }, envelope: { attack: 0.05, decay: 0.3, sustain: 0.1, release: 0.2 } }).toDestination();
+                    correctSynth = new Tone.Synth({ oscillator: { type: "sine" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.1 } }).toDestination();
+                    incorrectSynth = new Tone.Synth({ oscillator: { type: "square" }, envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.1 } }).toDestination();
+                    waveClearSynth = new Tone.Synth({ oscillator: { type: "sine" }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.2 } }).toDestination();
+
+                    audioInitialized = true;
+                    console.log("🔊 Sonidos inicializados con Tone.js");
+                } catch (error) {
+                    console.error("Error inicializando Tone.js:", error);
+                    audioInitialized = false; // Marcar como no inicializado si falla
+                    soundsEnabled = false; // Desactivar sonidos si hay error
+                    muteBtn.textContent = '🔇 Sonido OFF';
+                }
+            } else if (!audioInitialized) {
+                console.warn("Tone.js no está cargado o ya hubo un error. Los sonidos están desactivados.");
+                soundsEnabled = false;
+                muteBtn.textContent = '🔇 Sonido OFF';
+            }
+        }
+
+        function playSound(type) {
+            if (!soundsEnabled || !audioInitialized || typeof Tone === 'undefined' || !Tone.context || Tone.context.state !== 'running') return;
+            try {
+                switch (type) {
+                    case 'playerShoot': if (playerShootSynth) playerShootSynth.triggerAttackRelease("C5", "8n", Tone.now()); break;
+                    case 'invaderShoot': if (invaderShootSynth) invaderShootSynth.triggerAttackRelease("G3", "8n", Tone.now()); break;
+                    case 'explosion': if (explosionSynth) explosionSynth.triggerAttackRelease("4n", Tone.now()); break;
+                    case 'itemPickup': if (itemPickupSynth) itemPickupSynth.triggerAttackRelease("E6", "16n", Tone.now()); break;
+                    case 'questionAppear': if (questionSynth) questionSynth.triggerAttackRelease("A4", "4n", Tone.now()); break;
+                    case 'correctAnswer': if (correctSynth) correctSynth.triggerAttackRelease("C6", "8n", Tone.now()); break;
+                    case 'incorrectAnswer': if (incorrectSynth) incorrectSynth.triggerAttackRelease("C3", "4n", Tone.now()); break;
+                    case 'waveClear': if (waveClearSynth) waveClearSynth.triggerAttackRelease("G5", "4n", Tone.now()); break;
+                }
+            } catch (error) {
+                console.error(`Error al reproducir sonido '${type}':`, error);
+            }
+        }
+
+        function toggleMute() {
+            soundsEnabled = !soundsEnabled;
+            muteBtn.textContent = soundsEnabled ? '🔈 Sonido ON' : '🔇 Sonido OFF';
+            console.log(soundsEnabled ? "Sonidos activados" : "Sonidos desactivados");
+            if (soundsEnabled && typeof Tone !== 'undefined' && Tone.context.state === 'suspended') {
+                 Tone.start().then(() => {
+                    console.log("AudioContext reanudado por usuario.");
+                    if (!audioInitialized) initializeSounds();
+                 }).catch(err => console.error("Error reanudando AudioContext:", err));
+            }
+        }
+        muteBtn.addEventListener('click', toggleMute);
+
+
+        // Estado del juego
+        let player;
+        let invaderGrid;
+        let playerBullets = [];
+        let invaderBullets = [];
+        let items = [];
+        let particles = [];
+
+        let score = 0;
+        let lives = 3;
+        let level = 1;
+        let wave = 1;
+        let gameOver = false;
+        let gamePaused = false;
+        let gameRunning = false;
+        let currentDifficulty = 'medium';
+        let questionsPerLevel = { easy: 10, medium: 15, hard: 20 }; // Ajustado según nuevo diseño
+        let questionsTarget = 0;
+        let questionsAnsweredThisLevel = 0;
+        let questionsCorrectThisLevel = 0;
+        let totalQuestionsAnsweredGame = 0; // Para estadísticas globales del juego
+        let totalQuestionsCorrectGame = 0; // Para estadísticas globales del juego
+        let currentQuestionData = null;
+        let lastTime = 0;
+        let keys = {};
+        let shootCooldown = 0;
+        const SHOOT_COOLDOWN_TIME = 300;
+        let fastShootActive = false;
+        let fastShootTimer = 0;
+        const FAST_SHOOT_DURATION = 5000;
+        let shieldActive = false;
+        let shieldTimer = 0;
+        const SHIELD_DURATION = 5000;
+
+        // --- Clases del Juego (Sin cambios mayores, solo comentarios y leves ajustes) ---
+        class Player {
+             constructor(x, y, width, height, canvas) {
+                 this.canvas = canvas;
+                 this.baseWidth = width;
+                 this.baseHeight = height;
+                 this.width = this.baseWidth;
+                 this.height = this.baseHeight;
+                 this.x = x - this.width / 2;
+                 this.y = y - this.height / 2;
+                 this.speed = 5; // Velocidad del jugador
+                 this.emoji = '🚀'; // Emoji del jugador
+                 this.rotation = -Math.PI / 4; // *** Rotación inicial -45 grados ***
+                 this.hit = false; // Estado de golpe
+                 this.hitTimer = 0; // Temporizador de invulnerabilidad post-golpe
+                 this.hitDuration = 1000; // Duración de invulnerabilidad
+             }
+
+             draw(ctx) {
+                 // Parpadeo si está golpeado e invulnerable
+                 if (this.hit && Math.floor(this.hitTimer / 80) % 2 === 0) {
+                     return;
+                 }
+
+                 ctx.save();
+                 const centerX = this.x + this.width / 2;
+                 const centerY = this.y + this.height / 2;
+                 ctx.translate(centerX, centerY);
+                 ctx.rotate(this.rotation);
+
+                 // Dibujar emoji del jugador
+                 ctx.font = `${this.width * 1.1}px Arial`; // Tamaño del emoji
+                 ctx.textAlign = 'center';
+                 ctx.textBaseline = 'middle';
+                 ctx.fillText(this.emoji, 0, 0);
+
+                 // Dibujar escudo si está activo
+                 if (shieldActive) {
+                     const shieldRadius = Math.max(this.width, this.height) * 0.8;
+                     ctx.beginPath();
+                     ctx.arc(0, 0, shieldRadius, 0, Math.PI * 2);
+                     const shieldPulse = Math.abs(Math.sin(performance.now() / 200)); // Efecto pulsante
+                     ctx.strokeStyle = `rgba(0, 255, 255, ${0.5 + shieldPulse * 0.5})`;
+                     ctx.lineWidth = 2 + shieldPulse * 2;
+                     ctx.setLineDash([8, 4]);
+                     ctx.stroke();
+                     ctx.setLineDash([]);
+                 }
+                 ctx.restore();
+             }
+
+             move(direction) {
+                 if (gamePaused || this.hit) return; // No mover si pausado o golpeado
+
+                 if (direction === 'left') {
+                     this.x -= this.speed;
+                 } else if (direction === 'right') {
+                     this.x += this.speed;
+                 }
+                 // Mantener al jugador dentro del canvas
+                 this.x = Math.max(0, Math.min(this.x, this.canvas.width - this.width));
+             }
+
+             shoot() {
+                 if (shootCooldown <= 0 && !gamePaused) {
+                     playSound('playerShoot');
+                     const centerX = this.x + this.width / 2;
+                     // const tipOffsetY = -this.height * 0.6; // La bala sale de la punta de la nave
+
+                     // Calcular la posición de la "punta" rotada
+                     // const rotatedTipX = centerX + tipOffsetY * Math.sin(this.rotation); // Debería ser 0 si no hay rotación de nave
+                     // const rotatedTipY = (this.y + this.height / 2) + tipOffsetY * Math.cos(this.rotation); // Ajuste para Y
+
+                     const bulletWidth = 4;
+                     const bulletHeight = 15;
+                     const bulletColor = getComputedStyle(document.documentElement).getPropertyValue('--player-bullet-color').trim();
+
+                     playerBullets.push(new Bullet(centerX - bulletWidth / 2, this.y, bulletWidth, bulletHeight, bulletColor, 8, true));
+
+                     // Cooldown de disparo (más rápido si 'fastShootActive')
+                     shootCooldown = fastShootActive ? SHOOT_COOLDOWN_TIME / 3 : SHOOT_COOLDOWN_TIME;
+                 }
+             }
+
+             update(deltaTime) {
+                 // Actualizar cooldowns y timers
+                 if (shootCooldown > 0) shootCooldown -= deltaTime;
+                 if (this.hit) {
+                     this.hitTimer += deltaTime;
+                     if (this.hitTimer >= this.hitDuration) {
+                         this.hit = false;
+                         this.hitTimer = 0;
+                     }
+                 }
+                 if (fastShootActive) {
+                     fastShootTimer -= deltaTime;
+                     if (fastShootTimer <= 0) fastShootActive = false;
+                 }
+                 if (shieldActive) {
+                     shieldTimer -= deltaTime;
+                     if (shieldTimer <= 0) shieldActive = false;
+                 }
+             }
+
+             activateFastShoot() { fastShootActive = true; fastShootTimer = FAST_SHOOT_DURATION; }
+             activateShield() { shieldActive = true; shieldTimer = SHIELD_DURATION; }
+
+             reset() { // Reposicionar al jugador
+                 this.x = this.canvas.width / 2 - this.width / 2;
+                 this.y = this.canvas.height - this.height - 20;
+                 this.hit = false;
+                 this.hitTimer = 0;
+                 fastShootActive = false;
+                 shieldActive = false;
+             }
+
+             takeHit() { // Cuando el jugador es golpeado
+                 if (!this.hit && !shieldActive) { // Si no es invulnerable y no tiene escudo
+                     lives--;
+                     this.hit = true; // Activar invulnerabilidad temporal
+                     this.hitTimer = 0;
+                     playSound('explosion');
+                     createExplosion(this.x + this.width / 2, this.y + this.height / 2, getComputedStyle(document.documentElement).getPropertyValue('--accent-red').trim());
+                     updateUI();
+                     if (lives <= 0) {
+                         triggerGameOver("¡Tu nave 🚀 ha sido destruida!");
+                     }
+                     return true; // Golpe exitoso
+                 } else if (shieldActive) { // Si tiene escudo
+                     playSound('itemPickup'); // Sonido de escudo golpeado
+                     shieldTimer -= 500; // Reducir duración del escudo
+                     if (shieldTimer <= 0) shieldActive = false;
+                     createExplosion(this.x + this.width/2, this.y + this.height/2, getComputedStyle(document.documentElement).getPropertyValue('--item-shield-color').trim(), 5); // Efecto visual
+                 }
+                 return false; // Golpe absorbido o jugador invulnerable
+             }
+        }
+
+        class Bullet {
+             constructor(x, y, width, height, color, speed, isPlayerBullet) {
+                 this.x = x; this.y = y; this.width = width; this.height = height;
+                 this.color = color; this.speed = speed; this.isPlayerBullet = isPlayerBullet;
+                 this.vy = isPlayerBullet ? -speed : speed; // Dirección vertical
+             }
+             update(deltaTime) { this.y += this.vy * (deltaTime / 16.67); } // Mover bala
+             draw(ctx) { // Dibujar bala (estilo láser)
+                 ctx.save();
+                 ctx.strokeStyle = this.color; ctx.lineWidth = 2; ctx.setLineDash([5, 3]);
+                 ctx.beginPath(); ctx.moveTo(this.x + this.width / 2, this.y);
+                 ctx.lineTo(this.x + this.width / 2, this.y + this.height); ctx.stroke();
+                 ctx.restore();
+             }
+             isOffscreen(canvasHeight) { return this.y + this.height < 0 || this.y > canvasHeight; } // Verificar si está fuera de pantalla
+        }
+
+        class Invader {
+             constructor(x, y, width, height, type = '👾', points = 10) {
+                 this.x = x; this.y = y; this.width = width; this.height = height;
+                 this.emoji = type; this.points = points;
+                 this.hit = false; this.hitTimer = 0; this.hitDuration = 150; // Tiempo de "hit" visual
+             }
+             draw(ctx) { // Dibujar invasor (con efecto si es golpeado)
+                 let currentEmoji = this.emoji; let drawX = this.x; let drawY = this.y;
+                 if (this.hit) { // Efecto visual al ser golpeado
+                     if (Math.random() > 0.5) {
+                         ctx.filter = `brightness(${1 + Math.random() * 0.5}) contrast(${1 + Math.random() * 0.5})`;
+                         drawX += (Math.random() - 0.5) * 4; drawY += (Math.random() - 0.5) * 4;
+                     } else { currentEmoji = '💥'; }
+                 }
+                 ctx.font = `${this.width}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                 ctx.fillText(currentEmoji, drawX + this.width / 2, drawY + this.height / 2);
+                 ctx.filter = 'none';
+             }
+             update(deltaTime) { if (this.hit) this.hitTimer += deltaTime; } // Actualizar timer de golpe
+             shoot() { // Disparo del invasor
+                 playSound('invaderShoot');
+                 const bulletWidth = 4; const bulletHeight = 10;
+                 const bulletColor = getComputedStyle(document.documentElement).getPropertyValue('--invader-bullet-color').trim();
+                 invaderBullets.push(new Bullet(this.x + this.width / 2 - bulletWidth / 2, this.y + this.height, bulletWidth, bulletHeight, bulletColor, 4 + level * 0.5, false));
+             }
+        }
+
+        class InvaderGrid {
+             constructor(cols, rows, invaderWidth, invaderHeight, spacingX, spacingY, startY, canvasWidth) {
+                 this.cols = cols; this.rows = rows;
+                 this.invaderWidth = invaderWidth; this.invaderHeight = invaderHeight;
+                 this.spacingX = spacingX; this.spacingY = spacingY;
+                 this.startY = startY; this.canvasWidth = canvasWidth;
+                 this.invaders = []; this.direction = 1; // Dirección de movimiento (1 derecha, -1 izquierda)
+                 this.speed = 1 + level * 0.2 + (wave - 1) * 0.1; // Velocidad de la grid
+                 this.shootInterval = Math.max(250, 1500 - level * 100 - (wave - 1) * 50); // Intervalo de disparo
+                 this.shootTimer = this.shootInterval;
+                 this.totalWidth = cols * invaderWidth + (cols - 1) * spacingX;
+                 this.x = (canvasWidth - this.totalWidth) / 2; this.y = startY;
+                 this.createGrid();
+             }
+             createGrid() { // Crear la formación de invasores
+                 this.invaders = [];
+                 const invaderTypes = ['👾', '👽', '👻', '💀', '🤖']; const points = [10, 20, 30, 40, 50];
+                 for (let r = 0; r < this.rows; r++) {
+                     for (let c = 0; c < this.cols; c++) {
+                         const invaderX = this.x + c * (this.invaderWidth + this.spacingX);
+                         const invaderY = this.y + r * (this.invaderHeight + this.spacingY);
+                         const typeIndex = r % invaderTypes.length;
+                         this.invaders.push(new Invader(invaderX, invaderY, this.invaderWidth, this.invaderHeight, invaderTypes[typeIndex], points[typeIndex]));
+                     }
+                 }
+             }
+             update(deltaTime) { // Actualizar la grid de invasores
+                 this.invaders.forEach(invader => invader.update(deltaTime));
+                 this.invaders = this.invaders.filter(invader => !(invader.hit && invader.hitTimer >= invader.hitDuration)); // Eliminar destruidos
+                 if (this.invaders.length === 0) return;
+
+                 let moveDown = false; const dx = this.direction * this.speed * (deltaTime / 16.67);
+                 let currentMinX = Infinity; let currentMaxX = -Infinity;
+                 this.invaders.forEach(invader => { currentMinX = Math.min(currentMinX, invader.x); currentMaxX = Math.max(currentMaxX, invader.x + invader.width); });
+
+                 // Cambiar dirección y bajar si tocan el borde
+                 if ((this.direction === 1 && currentMaxX + dx > this.canvasWidth) || (this.direction === -1 && currentMinX + dx < 0)) {
+                     this.direction *= -1; moveDown = true; this.speed += 0.02;
+                 }
+                 this.invaders.forEach(invader => { if (moveDown) invader.y += this.invaderHeight / 5; else invader.x += dx; });
+
+                 // Gestionar disparos de la grid
+                 this.shootTimer -= deltaTime;
+                 if (this.shootTimer <= 0 && !gamePaused) { this.tryShoot(); this.shootTimer = Math.max(200, this.shootInterval - Math.random() * 500); }
+             }
+             draw(ctx) { this.invaders.forEach(invader => invader.draw(ctx)); } // Dibujar todos los invasores
+             tryShoot() { // Intentar que un invasor dispare
+                 if (this.invaders.length > 0) {
+                     const bottomInvaders = {}; let firstInvaderX = this.invaders.length > 0 ? this.invaders[0].x : 0;
+                     this.invaders.forEach(inv => {
+                         const col = Math.round((inv.x - firstInvaderX) / (this.invaderWidth + this.spacingX));
+                         if (!bottomInvaders[col] || inv.y > bottomInvaders[col].y) bottomInvaders[col] = inv;
+                     });
+                     const shooters = Object.values(bottomInvaders);
+                     if (shooters.length > 0) shooters[Math.floor(Math.random() * shooters.length)].shoot();
+                 }
+             }
+             checkGameOver(playerY) { return this.invaders.some(invader => invader.y + invader.height >= playerY); } // Verificar si llegaron al jugador
+             clearAll() { // Eliminar todos los invasores (efecto bomba)
+                 this.invaders.forEach(inv => createExplosion(inv.x + inv.width / 2, inv.y + inv.height / 2));
+                 this.invaders = []; score += 50 * level; updateUI(); // Bonus
+             }
+        }
+
+        class Item {
+             constructor(x, y, type) {
+                 this.x = x; this.y = y; this.width = 25; this.height = 25; this.type = type;
+                 this.speed = 2 + Math.random() * 1; this.emoji = this.getEmoji(); this.color = this.getColor();
+                 this.rotation = 0; this.rotationSpeed = (Math.random() - 0.5) * 0.1; // Rotación aleatoria
+             }
+             getEmoji() { // Emoji según tipo de item
+                 switch (this.type) {
+                     case 'life': return '💚'; case 'bomb': return '💣'; case 'score': return '💰';
+                     case 'question': return '❓'; case 'fastshoot': return '⚡'; case 'shield': return '🛡️';
+                     default: return '💎'; // Ítem genérico
+                 }
+             }
+             getColor() { /* ... (sin cambios) ... */ return '#FFFFFF';} // Color de respaldo
+             update(deltaTime) { this.y += this.speed * (deltaTime / 16.67); this.rotation += this.rotationSpeed * (deltaTime / 16.67); } // Mover y rotar
+             draw(ctx) { // Dibujar item
+                 ctx.save(); const centerX = this.x + this.width / 2; const centerY = this.y + this.height / 2;
+                 ctx.translate(centerX, centerY); ctx.rotate(this.rotation);
+                 ctx.font = `${this.width * 0.9}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                 ctx.fillText(this.emoji, 0, 0); ctx.restore();
+             }
+             isOffscreen(canvasHeight) { return this.y > canvasHeight; } // Verificar si está fuera de pantalla
+        }
+
+        class Particle {
+             constructor(x, y, color) {
+                 this.x = x; this.y = y; this.size = Math.random() * 3 + 2;
+                 const angle = Math.random() * Math.PI * 2; const speed = Math.random() * 3 + 1;
+                 this.speedX = Math.cos(angle) * speed; this.speedY = Math.sin(angle) * speed;
+                 this.color = color || '#FFF'; this.life = Math.random() * 600 + 300; // Duración de vida
+                 this.initialLife = this.life; this.gravity = 0.05; this.alpha = 1;
+             }
+             update(deltaTime) { // Actualizar partícula (movimiento y vida)
+                 this.speedY += this.gravity * (deltaTime / 16.67);
+                 this.x += this.speedX * (deltaTime / 16.67); this.y += this.speedY * (deltaTime / 16.67);
+                 this.life -= deltaTime; this.alpha = Math.max(0, this.life / this.initialLife);
+                 this.size = Math.max(0, this.size * (this.life / this.initialLife)); // Encoger al envejecer
+             }
+             draw(ctx) { // Dibujar partícula
+                 ctx.save(); ctx.fillStyle = this.color; ctx.globalAlpha = this.alpha;
+                 ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+                 ctx.restore();
+             }
+        }
+
+
+        // --- Funciones Principales del Juego ---
+
+        /**
+         * Inicializa un nuevo juego o un reinicio.
+         * @param {string} difficulty - La dificultad seleccionada ('easy', 'medium', 'hard').
+         */
+        function initGame(difficulty) {
+            console.log(`🚀 Iniciando juego en dificultad: ${difficulty}`);
+            currentDifficulty = difficulty;
+            questionsTarget = questionsPerLevel[difficulty];
+
+            // Reiniciar estado del juego
+            score = 0; lives = 3; level = 1; wave = 1;
+            gameOver = false; gamePaused = false; gameRunning = true;
+            playerBullets = []; invaderBullets = []; items = []; particles = [];
+            questionsAnsweredThisLevel = 0; questionsCorrectThisLevel = 0;
+            totalQuestionsAnsweredGame = 0; totalQuestionsCorrectGame = 0;
+            currentQuestionData = null; shootCooldown = 0;
+            fastShootActive = false; shieldActive = false;
+
+            resizeCanvas(); // Ajustar tamaño del canvas
+
+            // Crear jugador
+            const playerWidth = canvas.width * 0.055; // Un poco más grande
+            const playerHeight = playerWidth * 0.85;
+            player = new Player(canvas.width / 2, canvas.height - playerHeight - 20, playerWidth, playerHeight, canvas);
+
+            setupLevel(); // Configurar el primer nivel/oleada
+            updateUI(); // Actualizar marcadores
+
+            // Mostrar/ocultar elementos de la interfaz
+            startScreen.style.display = 'none';
+            gameElements.style.display = 'block';
+            pauseBtn.disabled = false; pauseBtn.textContent = '⏸️ Pausa';
+            restartBtnGlobal.disabled = false;
+
+            // Iniciar audio y bucle del juego
+            if (typeof Tone !== 'undefined') {
+                if (Tone.context.state !== 'running') {
+                    console.log("🔊 Esperando interacción para iniciar audio (Tone.start())...");
+                    // Tone.start() se llama en el evento del botón de inicio
+                    // Es importante que initializeSounds() se llame DESPUÉS de Tone.start()
+                } else if (!audioInitialized) {
+                    initializeSounds(); // Inicializar si Tone ya está corriendo pero los synths no
+                }
+            } else {
+                console.warn("Tone.js no disponible. Iniciando sin sonido.");
+                soundsEnabled = false; muteBtn.textContent = '🔇 Sonido OFF';
+            }
+            lastTime = performance.now();
+            gameLoop(lastTime); // Iniciar bucle del juego
+        }
+
+        /**
+         * Configura el inicio de un nivel o la primera oleada del nivel.
+         */
+        function setupLevel() {
+            wave = 1; // Reiniciar contador de oleada
+            playerBullets = []; invaderBullets = []; items = [];
+            // No limpiar partículas para que terminen su animación natural
+
+            regenerateInvaders(); // Crear la primera oleada de invasores
+
+            if (player) player.reset(); // Reposicionar jugador
+            updateUI(); // Actualizar la interfaz
+            console.log(`🌟 Nivel ${level} (Oleada ${wave}) configurado.`);
+        }
+
+        /**
+         * Regenera la parrilla de invasores para una nueva oleada.
+         */
+        function regenerateInvaders() {
+            console.log(`🌊 Regenerando oleada ${wave} para Nivel ${level}...`);
+            playSound('waveClear'); // Sonido para indicar nueva oleada
+
+            // Configuración de la grid (puede variar por nivel y oleada)
+            const cols = Math.min(10, 8 + Math.min(level - 1, 3) + Math.floor((wave-1)/2)); // Más columnas con nivel/oleada
+            const rows = Math.min(6, 4 + Math.floor((level - 1) / 2));
+            const invaderBaseWidth = canvas.width * 0.055;
+            const invaderWidth = Math.max(20, invaderBaseWidth);
+            const invaderHeight = invaderWidth * 0.8;
+            const spacingX = invaderWidth * 0.35;
+            const spacingY = invaderHeight * 0.45;
+            const startY = Math.max(30, 50 - (level-1)*5); // Empiezan un poco más arriba en niveles altos
+
+            invaderGrid = new InvaderGrid(cols, rows, invaderWidth, invaderHeight, spacingX, spacingY, startY, canvas.width);
+
+            if (wave > 1) { // Bonus por limpiar oleada (excepto la primera)
+                score += 25 * level * wave; updateUI();
+            }
+        }
+
+
+        /**
+         * Actualiza todos los elementos de la interfaz de usuario (UI).
+         */
+        function updateUI() {
+            scoreElement.textContent = score;
+            livesElement.textContent = lives;
+            levelElement.textContent = level;
+            questionsAnsweredUI.textContent = questionsAnsweredThisLevel;
+            questionsTargetUI.textContent = questionsTarget;
+            const remaining = Math.max(0, questionsTarget - questionsAnsweredThisLevel);
+            questionsRemainingUI.textContent = remaining;
+
+            // Actualizar barra de progreso de preguntas
+            const progressPercent = questionsTarget > 0 ? (questionsAnsweredThisLevel / questionsTarget) * 100 : 0;
+            questionProgressBar.style.width = `${progressPercent}%`;
+        }
+
+        /**
+         * Maneja la entrada del jugador (teclado/táctil).
+         * @param {number} deltaTime - Tiempo transcurrido desde el último frame.
+         */
+        function handleInput(deltaTime) {
+            if (!player || gamePaused || isModalVisible()) return; // No procesar input si no hay jugador, juego pausado o modal visible
+
+            // Movimiento
+            if (keys['ArrowLeft'] || keys['touchLeft']) player.move('left');
+            if (keys['ArrowRight'] || keys['touchRight']) player.move('right');
+            // Disparo
+            if (keys[' '] || keys['touchShoot']) player.shoot();
+        }
+
+        /**
+         * Dibuja todos los elementos del juego en el canvas.
+         */
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpiar canvas
+            particles.forEach(p => p.draw(ctx)); // Dibujar partículas
+            if (player) player.draw(ctx); // Dibujar jugador
+            if (invaderGrid) invaderGrid.draw(ctx); // Dibujar invasores
+            playerBullets.forEach(bullet => bullet.draw(ctx)); // Dibujar balas del jugador
+            invaderBullets.forEach(bullet => bullet.draw(ctx)); // Dibujar balas de invasores
+            items.forEach(item => item.draw(ctx)); // Dibujar items
+        }
+
+        /**
+         * Actualiza el estado de todos los elementos del juego.
+         * @param {number} deltaTime - Tiempo transcurrido desde el último frame.
+         */
+        function updateGame(deltaTime) {
+            if (player) player.update(deltaTime); // Actualizar jugador
+            if (invaderGrid) invaderGrid.update(deltaTime); // Actualizar grid de invasores
+
+            // Actualizar y filtrar balas (eliminar las que salen de pantalla)
+            playerBullets.forEach(bullet => bullet.update(deltaTime));
+            playerBullets = playerBullets.filter(bullet => !bullet.isOffscreen(canvas.height));
+            invaderBullets.forEach(bullet => bullet.update(deltaTime));
+            invaderBullets = invaderBullets.filter(bullet => !bullet.isOffscreen(canvas.height));
+
+            // Actualizar y filtrar items y partículas
+            items.forEach(item => item.update(deltaTime));
+            items = items.filter(item => !item.isOffscreen(canvas.height));
+            particles.forEach(particle => particle.update(deltaTime));
+            particles = particles.filter(particle => particle.life > 0);
+
+            checkCollisions(); // Verificar colisiones
+
+            // Verificar si los invasores llegaron al final (Game Over)
+            if (invaderGrid && invaderGrid.checkGameOver(player.y)) {
+                triggerGameOver("¡Los invasores 👾 han llegado a la base!");
+                return;
+            }
+
+            // Verificar si la oleada actual está limpia
+            if (invaderGrid && invaderGrid.invaders.length === 0 && !gameOver && !isModalVisible()) {
+                if (checkLevelCompletion()) { // ¿Se completaron las preguntas del nivel?
+                    triggerLevelComplete(); // Sí, nivel completado
+                } else { // No, regenerar nueva oleada
+                    wave++;
+                    regenerateInvaders();
+                }
+            }
+        }
+
+        /**
+         * Bucle principal del juego.
+         * @param {number} timestamp - Tiempo actual proporcionado por requestAnimationFrame.
+         */
+        function gameLoop(timestamp) {
+            if (!gameOver) { // Continuar el bucle si el juego no ha terminado
+                requestAnimationFrame(gameLoop);
+            }
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+            const dt = Math.min(deltaTime, 50); // Limitar delta time para evitar saltos grandes
+
+            if (!gamePaused && !isModalVisible()) { // Solo actualizar si no está pausado y no hay modal activo (excepto el de pregunta que se maneja diferente)
+                handleInput(dt);
+                updateGame(dt);
+            }
+            drawGame(); // Dibujar siempre, incluso si está pausado
+        }
+
+        /**
+         * Alterna el estado de pausa del juego.
+         */
+        function togglePause() {
+            if (gameOver || isModalVisible()) return; // No pausar si el juego terminó o hay un modal (que no sea el de pregunta)
+            gamePaused = !gamePaused;
+            pauseMessage.style.display = gamePaused ? 'block' : 'none';
+            pauseBtn.textContent = gamePaused ? '▶️ Reanudar' : '⏸️ Pausa';
+            console.log(gamePaused ? "⏸️ Juego pausado" : "▶️ Juego reanudado");
+            if (!gamePaused) {
+                 lastTime = performance.now(); // Evitar saltos al reanudar
+            }
+        }
+
+        /**
+         * Reinicia el juego, volviendo a la pantalla de inicio.
+         */
+        function restartGame() {
+            console.log("🔄 Reiniciando juego...");
+            gameOver = true; gameRunning = false; gamePaused = false;
+            hideModal(gameOverModal); hideModal(levelCompleteModal); hideModal(questionModal);
+            startScreen.style.display = 'block';
+            gameElements.style.display = 'none';
+            pauseBtn.disabled = true; pauseBtn.textContent = '⏸️ Pausa';
+            restartBtnGlobal.disabled = true;
+            pauseMessage.style.display = 'none';
+            player = null; invaderGrid = null;
+            playerBullets = []; invaderBullets = []; items = []; particles = [];
+        }
+
+        /**
+         * Verifica todas las colisiones relevantes en el juego.
+         */
+        function checkCollisions() {
+             if (!player || !invaderGrid) return;
+
+             // 1. Balas del jugador vs Invasores
+             for (let i = playerBullets.length - 1; i >= 0; i--) {
+                 const bullet = playerBullets[i];
+                 for (let j = invaderGrid.invaders.length - 1; j >= 0; j--) {
+                     const invader = invaderGrid.invaders[j];
+                     if (!invader.hit &&
+                         bullet.x < invader.x + invader.width && bullet.x + bullet.width > invader.x &&
+                         bullet.y < invader.y + invader.height && bullet.y + bullet.height > invader.y)
+                     {
+                         score += invader.points * level; // Puntos escalan con nivel
+                         invader.hit = true; invader.hitTimer = 0;
+                         playSound('explosion');
+                         createExplosion(invader.x + invader.width / 2, invader.y + invader.height / 2);
+                         playerBullets.splice(i, 1); // Bala eliminada
+                         if (Math.random() < 0.20 + level * 0.02) { // Mayor chance de item con nivel
+                             dropItem(invader.x + invader.width / 2, invader.y + invader.height / 2);
+                         }
+                         updateUI();
+                         break; // Bala impacta solo a un invasor
+                     }
+                 }
+             }
+
+             // 2. Balas de invasores vs Jugador (y escudo)
+             for (let i = invaderBullets.length - 1; i >= 0; i--) {
+                 const bullet = invaderBullets[i];
+                 const playerCenterX = player.x + player.width / 2; const playerCenterY = player.y + player.height / 2;
+                 const bulletCenterX = bullet.x + bullet.width / 2; const bulletCenterY = bullet.y + bullet.height / 2;
+
+                 if (shieldActive) { // Colisión con escudo
+                     const shieldRadiusSq = (Math.max(player.width, player.height) * 0.8) ** 2;
+                     const distSq = (bulletCenterX - playerCenterX) ** 2 + (bulletCenterY - playerCenterY) ** 2;
+                     if (distSq < shieldRadiusSq) {
+                         invaderBullets.splice(i, 1); player.takeHit(); continue;
+                     }
+                 }
+                 // Colisión directa con jugador
+                 if (!player.hit && !shieldActive &&
+                     bullet.x < player.x + player.width && bullet.x + bullet.width > player.x &&
+                     bullet.y < player.y + player.height && bullet.y + bullet.height > player.y)
+                 {
+                     invaderBullets.splice(i, 1); player.takeHit();
+                 }
+             }
+
+             // 3. Items vs Jugador
+             for (let i = items.length - 1; i >= 0; i--) {
+                 const item = items[i];
+                 if (item.x < player.x + player.width && item.x + item.width > player.x &&
+                     item.y < player.y + player.height && item.y + item.height > player.y)
+                 {
+                     playSound('itemPickup'); activateItemEffect(item.type);
+                     items.splice(i, 1); updateUI();
+                 }
+             }
+
+             // 4. Invasores vs Jugador (colisión directa)
+             if (!player.hit && !shieldActive) {
+                 for (let i = invaderGrid.invaders.length - 1; i >= 0; i--) {
+                     const invader = invaderGrid.invaders[i];
+                     if (invader.x < player.x + player.width && invader.x + invader.width > player.x &&
+                         invader.y < player.y + player.height && invader.y + invader.height > player.y)
+                     {
+                         console.log("💥 ¡Colisión directa invasor-jugador!");
+                         createExplosion(invader.x + invader.width / 2, invader.y + invader.height / 2);
+                         invader.hit = true; invader.hitTimer = 0;
+                         player.takeHit(); // Daño al jugador
+                         // Podría ser más penalizante, ej: perder todas las vidas o game over instantáneo
+                     }
+                 }
+             }
+        }
+
+        /**
+         * Crea un efecto de explosión con partículas.
+         * @param {number} x - Posición X de la explosión.
+         * @param {number} y - Posición Y de la explosión.
+         * @param {string} [color='#FFFFFF'] - Color de las partículas.
+         * @param {number} [count=15] - Número de partículas.
+         */
+        function createExplosion(x, y, color = '#FFFFFF', count = 15) {
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+        /**
+         * Suelta un ítem aleatorio en la posición dada.
+         * @param {number} x - Posición X.
+         * @param {number} y - Posición Y.
+         */
+        function dropItem(x, y) {
+            // Probabilidades ponderadas para los ítems
+            const weightedTypes = [
+                { type: 'score', weight: 4 },    // 💰
+                { type: 'question', weight: 5 }, // ❓ (más frecuente)
+                { type: 'fastshoot', weight: 2 },// ⚡
+                { type: 'shield', weight: 2 },   // 🛡️
+                { type: 'life', weight: 1 },     // 💚 (menos frecuente)
+                { type: 'bomb', weight: 1 }      // 💣 (menos frecuente)
+            ];
+            const totalWeight = weightedTypes.reduce((sum, item) => sum + item.weight, 0);
+            let randomNum = Math.random() * totalWeight;
+            let chosenType = 'score'; // Default
+            for (const item of weightedTypes) {
+                if (randomNum < item.weight) { chosenType = item.type; break; }
+                randomNum -= item.weight;
+            }
+            items.push(new Item(x - 12.5, y - 12.5, chosenType));
+        }
+
+        /**
+         * Activa el efecto de un ítem recogido.
+         * @param {string} type - El tipo de ítem.
+         */
+        function activateItemEffect(type) {
+            console.log(`💎 Item recogido: ${type}`);
+            switch (type) {
+                case 'life': if (lives < 5) lives++; else score += 50 * level; break; // Máximo 5 vidas
+                case 'bomb': if (invaderGrid) invaderGrid.clearAll(); break;
+                case 'score': score += 100 * level; break;
+                case 'question':
+                    if (gameRunning && !isModalVisible() && currentQuestionData === null) { // Solo si no hay otra pregunta o modal
+                         askQuestion('icon');
+                    } else { console.warn("Intento de lanzar pregunta ❓ mientras otra está activa o juego pausado."); }
+                    break;
+                case 'fastshoot': if (player) player.activateFastShoot(); break;
+                case 'shield': if (player) player.activateShield(); break;
+                default: console.warn(`Tipo de ítem desconocido: ${type}`);
+            }
+            updateUI();
+        }
+
+        // --- Lógica de Preguntas (NUEVO BANCO Y MATHJAX) ---
+        // BANCO DE PREGUNTAS DE FÍSICA AMPLIADO
+// Nota: Usar g ≈ 10 m/s² para simplificar cálculos donde aplique, a menos que se indique lo contrario.
+
+const physicsQuestions = [
+    // ------------------------------------------------------------------------------------
+    // TEMA: MAGNITUDES FÍSICAS
+    // ------------------------------------------------------------------------------------
+    // --- Dificultad: Fácil ---
+    {
+        question: "¿Cuál de las siguientes es una magnitud física fundamental en el Sistema Internacional (SI)?",
+        options: ["Velocidad", "Fuerza", "Masa", "Aceleración"],
+        answer: 2,
+        explanation: "La masa (kg) es una de las 7 magnitudes fundamentales del SI. Las otras (longitud, tiempo, corriente eléctrica, temperatura, cantidad de sustancia, intensidad luminosa) también lo son. Velocidad, fuerza y aceleración son magnitudes derivadas.",
+        difficulty: 'easy',
+        topic: "Magnitudes Físicas"
+    },
+    {
+        question: "La temperatura es una magnitud...",
+        options: ["Vectorial", "Escalar", "Fundamental y Vectorial", "Derivada y Escalar"],
+        answer: 1,
+        explanation: "La temperatura se define completamente con un número y una unidad (ej: 25 °C), no requiere dirección ni sentido. Por lo tanto, es una magnitud escalar. También es una magnitud fundamental en el SI (Kelvin).",
+        difficulty: 'easy',
+        topic: "Magnitudes Físicas"
+    },
+    {
+        question: "¿Qué tipo de magnitud es el tiempo?",
+        options: ["Vectorial", "Escalar", "Derivada", "Compuesta"],
+        answer: 1,
+        explanation: "El tiempo es una magnitud escalar fundamental. Se mide en segundos (s) en el SI.",
+        difficulty: 'easy',
+        topic: "Magnitudes Físicas"
+    },
+    {
+        question: "La longitud es una magnitud física que se considera...",
+        options: ["Derivada y escalar", "Fundamental y escalar", "Derivada y vectorial", "Fundamental y vectorial"],
+        answer: 1,
+        explanation: "La longitud es una de las siete magnitudes fundamentales del SI y es escalar, ya que se describe completamente con un valor numérico y una unidad (ej: metros).",
+        difficulty: 'easy',
+        topic: "Magnitudes Físicas"
+    },
+    // --- Dificultad: Medio ---
+    {
+        question: "El desplazamiento se diferencia de la distancia recorrida en que el desplazamiento es una magnitud...",
+        options: ["Escalar que siempre es positiva", "Vectorial", "Escalar que puede ser negativa", "Adimensional"],
+        answer: 1,
+        explanation: "El desplazamiento es una magnitud vectorial, ya que indica el cambio de posición y tiene magnitud, dirección y sentido. La distancia recorrida es una magnitud escalar.",
+        difficulty: 'medium',
+        topic: "Magnitudes Físicas"
+    },
+    {
+        question: "La velocidad es una magnitud __________, mientras que la rapidez es una magnitud __________.",
+        options: ["Escalar, vectorial", "Vectorial, escalar", "Fundamental, derivada", "Derivada, fundamental"],
+        answer: 1,
+        explanation: "La velocidad es vectorial (indica módulo, dirección y sentido del cambio de posición). La rapidez es el módulo de la velocidad, por lo tanto, es escalar.",
+        difficulty: 'medium',
+        topic: "Magnitudes Físicas"
+    },
+    {
+        question: "¿Cuál de las siguientes opciones describe mejor una magnitud vectorial?",
+        options: ["Solo tiene valor numérico", "Tiene valor numérico y unidad", "Tiene valor numérico, unidad y dirección", "Es una constante universal"],
+        answer: 2,
+        explanation: "Una magnitud vectorial se caracteriza por tener un módulo (valor numérico con unidad), una dirección y un sentido.",
+        difficulty: 'medium',
+        topic: "Magnitudes Físicas"
+    },
+    {
+        question: "La fuerza es una magnitud física de tipo:",
+        options: ["Escalar y fundamental", "Vectorial y fundamental", "Escalar y derivada", "Vectorial y derivada"],
+        answer: 3,
+        explanation: "La fuerza es una magnitud vectorial (tiene magnitud, dirección y sentido) y es derivada, ya que se define a partir de otras magnitudes (ej: $F=ma$, donde masa es fundamental y aceleración es derivada).",
+        difficulty: 'medium',
+        topic: "Magnitudes Físicas"
+    },
+    // --- Dificultad: Difícil ---
+    {
+        question: "La densidad, definida como masa por unidad de volumen ($\rho = m/V$), es una magnitud:",
+        options: ["Fundamental y escalar", "Derivada y escalar", "Fundamental y vectorial", "Derivada y vectorial"],
+        answer: 1,
+        explanation: "La densidad se deriva de la masa (fundamental) y el volumen (derivado de longitud al cubo), y es una magnitud escalar, ya que no posee dirección ni sentido.",
+        difficulty: 'hard',
+        topic: "Magnitudes Físicas"
+    },
+    {
+        question: "El momento lineal (cantidad de movimiento), $p = mv$, es una magnitud:",
+        options: ["Escalar", "Vectorial", "Adimensional", "Fundamental"],
+        answer: 1,
+        explanation: "El momento lineal es el producto de la masa (escalar) por la velocidad (vectorial), resultando en una magnitud vectorial con la misma dirección y sentido que la velocidad.",
+        difficulty: 'hard',
+        topic: "Magnitudes Físicas"
+    },
+    {
+        question: "El trabajo mecánico, $W = \vec{F} \cdot \vec{d} = Fd \cos\theta$, a pesar de involucrar vectores fuerza y desplazamiento, es una magnitud:",
+        options: ["Vectorial", "Escalar", "Fundamental", "Adimensional"],
+        answer: 1,
+        explanation: "El trabajo mecánico es el producto escalar de la fuerza y el desplazamiento. El producto escalar de dos vectores da como resultado un escalar.",
+        difficulty: 'hard',
+        topic: "Magnitudes Físicas"
+    },
+    {
+        question: "La intensidad de campo eléctrico, $\vec{E}$, es una magnitud:",
+        options: ["Escalar", "Vectorial", "Fundamental", "Adimensional"],
+        answer: 1,
+        explanation: "La intensidad de campo eléctrico es una magnitud vectorial, ya que en cada punto del espacio tiene un módulo, una dirección y un sentido que indica la fuerza que actuaría sobre una carga de prueba positiva.",
+        difficulty: 'hard',
+        topic: "Magnitudes Físicas"
+    },
+
+    // ------------------------------------------------------------------------------------
+    // TEMA: SISTEMA INTERNACIONAL DE MEDIDAS (SI)
+    // ------------------------------------------------------------------------------------
+    // --- Dificultad: Fácil ---
+    {
+        question: "En el Sistema Internacional (SI), la unidad de longitud es el:",
+        options: ["Pie", "Metro", "Yarda", "Milla náutica"],
+        answer: 1,
+        explanation: "El metro (símbolo: m) es la unidad base de longitud en el Sistema Internacional de Unidades (SI).",
+        difficulty: 'easy',
+        topic: "SI"
+    },
+    {
+        question: "La unidad de tiempo en el SI es el:",
+        options: ["Minuto", "Hora", "Segundo", "Día"],
+        answer: 2,
+        explanation: "El segundo (símbolo: s) es la unidad base de tiempo en el Sistema Internacional de Unidades (SI).",
+        difficulty: 'easy',
+        topic: "SI"
+    },
+    {
+        question: "¿Cuál es la unidad de masa en el SI?",
+        options: ["Gramo (g)", "Libra (lb)", "Kilogramo (kg)", "Tonelada (t)"],
+        answer: 2,
+        explanation: "El kilogramo (símbolo: kg) es la unidad base de masa en el Sistema Internacional de Unidades (SI).",
+        difficulty: 'easy',
+        topic: "SI"
+    },
+    {
+        question: "La unidad de intensidad de corriente eléctrica en el SI es el:",
+        options: ["Voltio (V)", "Ohmio ($\Omega$)", "Amperio (A)", "Vatio (W)"],
+        answer: 2,
+        explanation: "El amperio (símbolo: A), también llamado ampere, es la unidad base de intensidad de corriente eléctrica en el SI.",
+        difficulty: 'easy',
+        topic: "SI"
+    },
+    // --- Dificultad: Medio ---
+    {
+        question: "El Newton (N), unidad de fuerza en el SI, se define como:",
+        options: ["$kg \cdot m/s$", "$kg \cdot m^2/s$", "$kg \cdot m/s^2$", "$J/s$"],
+        answer: 2,
+        explanation: "Un Newton es la fuerza necesaria para proporcionar una aceleración de $1 m/s^2$ a un objeto cuya masa es de $1 kg$. Por la segunda ley de Newton ($F=ma$), sus unidades son $kg \cdot m/s^2$.",
+        difficulty: 'medium',
+        topic: "SI"
+    },
+    {
+        question: "La unidad de energía o trabajo en el SI es el Joule (J). ¿Cuál es su equivalencia en unidades fundamentales?",
+        options: ["$kg \cdot m/s^2$", "$kg \cdot m^2/s^2$", "$kg \cdot m/s$", "$N/m$"],
+        answer: 1,
+        explanation: "Un Joule se define como el trabajo realizado cuando una fuerza de un Newton desplaza un objeto un metro en la dirección de la fuerza. $J = N \cdot m = (kg \cdot m/s^2) \cdot m = kg \cdot m^2/s^2$.",
+        difficulty: 'medium',
+        topic: "SI"
+    },
+    {
+        question: "La unidad de potencia en el SI es el Vatio (W). Se define como:",
+        options: ["Energía por unidad de tiempo ($J/s$)", "Fuerza por unidad de área ($N/m^2$)", "Carga por unidad de tiempo ($C/s$)", "Trabajo por unidad de carga ($J/C$)"],
+        answer: 0,
+        explanation: "La potencia es la rapidez con la que se realiza un trabajo o se transfiere energía. Un Vatio equivale a un Joule por segundo ($W = J/s$).",
+        difficulty: 'medium',
+        topic: "SI"
+    },
+    {
+        question: "¿Cuál de las siguientes NO es una unidad fundamental del SI?",
+        options: ["Kelvin (K)", "Mol (mol)", "Candela (cd)", "Voltio (V)"],
+        answer: 3,
+        explanation: "El Kelvin (temperatura), Mol (cantidad de sustancia) y Candela (intensidad luminosa) son unidades fundamentales del SI. El Voltio (diferencia de potencial eléctrico) es una unidad derivada ($V = J/C$).",
+        difficulty: 'medium',
+        topic: "SI"
+    },
+    // --- Dificultad: Difícil ---
+    {
+        question: "La unidad de presión en el SI es el Pascal (Pa). ¿Cuál es su equivalencia en unidades fundamentales?",
+        options: ["$N/m^3$", "$kg / (m \cdot s^2)$", "$kg \cdot m^2 / s^3$", "$J/m^3$"],
+        answer: 1,
+        explanation: "Presión es Fuerza por unidad de Área. $P = F/A$. En unidades SI, $F$ es Newton ($kg \cdot m/s^2$) y $A$ es $m^2$. Entonces, $Pa = (kg \cdot m/s^2) / m^2 = kg / (m \cdot s^2)$.",
+        difficulty: 'hard',
+        topic: "SI"
+    },
+    {
+        question: "La constante de gravitación universal G tiene unidades en el SI que se pueden expresar como:",
+        options: ["$N \cdot m^2 / kg^2$", "$N \cdot kg^2 / m^2$", "$m^3 / (kg \cdot s^2)$", "Ambas A y C son correctas"],
+        answer: 3,
+        explanation: "De la ley de gravitación $F = G(m_1m_2)/r^2$, despejamos $G = Fr^2/(m_1m_2)$. Unidades: $N \cdot m^2 / kg^2$. Como $N = kg \cdot m/s^2$, sustituyendo: $(kg \cdot m/s^2) \cdot m^2 / kg^2 = m^3 / (kg \cdot s^2)$. Ambas expresiones son correctas.",
+        difficulty: 'hard',
+        topic: "SI"
+    },
+    {
+        question: "La unidad de permitividad eléctrica del vacío, $\epsilon_0$, en el SI se puede expresar como Faradio por metro (F/m). ¿Cuál es la expresión del Faradio (F) en términos de unidades fundamentales del SI?",
+        options: ["$s^4 \cdot A^2 / (kg \cdot m^2)$", "$kg \cdot m^2 / (s^2 \cdot A^2)$", "$s^2 \cdot A / (kg \cdot m)$", "$kg \cdot m / (s^3 \cdot A)$"],
+        answer: 0,
+        explanation: "Un Faradio es Coulomb por Voltio ($F=C/V$). $C = A \cdot s$. $V = J/C = (kg \cdot m^2/s^2) / (A \cdot s) = kg \cdot m^2 / (A \cdot s^3)$. Entonces $F = (A \cdot s) / (kg \cdot m^2 / (A \cdot s^3)) = A^2 \cdot s^4 / (kg \cdot m^2)$.",
+        difficulty: 'hard',
+        topic: "SI"
+    },
+    {
+        question: "El Tesla (T), unidad de densidad de flujo magnético en el SI, se puede expresar como:",
+        options: ["$kg / (A \cdot s^2)$", "$N / (C \cdot m)$", "$V \cdot s / m^2$", "Todas las anteriores son correctas"],
+        answer: 0, // De F = qvB, B = F/(qv). N / (C * m/s) = N*s / (C*m). Ns / (As * m) = N / (A*m). (kg*m/s^2)/(A*m) = kg/(A*s^2)
+        explanation: "Un Tesla se define de varias maneras equivalentes. De la fuerza de Lorentz $F=qvB$, $B = F/(qv)$. Unidades: $N / (C \cdot m/s) = (N \cdot s) / (C \cdot m)$. Como $C = A \cdot s$, esto es $(N \cdot s) / (A \cdot s \cdot m) = N / (A \cdot m)$. Si $N = kg \cdot m/s^2$, entonces $T = (kg \cdot m/s^2) / (A \cdot m) = kg / (A \cdot s^2)$. También $T = V \cdot s / m^2$ (de la ley de Faraday). La opción A es la correcta en términos de $kg, A, s$.",
+        difficulty: 'hard',
+        topic: "SI"
+    },
+
+
+    // ------------------------------------------------------------------------------------
+    // TEMA: PREFIJOS DEL SI
+    // ------------------------------------------------------------------------------------
+    // --- Dificultad: Fácil ---
+    {
+        question: "El prefijo 'kilo' (k) en el SI representa un factor de:",
+        options: ["100", "1000", "0.01", "0.001"],
+        answer: 1,
+        explanation: "'kilo' (k) significa mil, es decir, un factor de $10^3$ o 1000. Ejemplo: 1 kilómetro = 1000 metros.",
+        difficulty: 'easy',
+        topic: "Prefijos SI"
+    },
+    {
+        question: "El prefijo 'mili' (m) representa un factor de:",
+        options: ["$10^{-2}$ (centi)", "$10^{-3}$ (mili)", "$10^{-6}$ (micro)", "$10^{3}$ (kilo)"],
+        answer: 1,
+        explanation: "'mili' (m) significa la milésima parte, es decir, un factor de $10^{-3}$ o 0.001. Ejemplo: 1 mililitro = 0.001 litros.",
+        difficulty: 'easy',
+        topic: "Prefijos SI"
+    },
+    {
+        question: "¿Qué prefijo del SI significa $10^6$ (un millón)?",
+        options: ["Mega (M)", "Kilo (k)", "Giga (G)", "Tera (T)"],
+        answer: 0,
+        explanation: "El prefijo 'Mega' (M) representa un factor de $10^6$ o un millón. Ejemplo: 1 Megavatio = 1,000,000 vatios.",
+        difficulty: 'easy',
+        topic: "Prefijos SI"
+    },
+    {
+        question: "El prefijo 'centi' (c) equivale a:",
+        options: ["$10^{-1}$", "$10^{-2}$", "$10^{-3}$", "$100$"],
+        answer: 1,
+        explanation: "'centi' (c) significa la centésima parte, es decir, un factor de $10^{-2}$ o 0.01. Ejemplo: 1 centímetro = 0.01 metros.",
+        difficulty: 'easy',
+        topic: "Prefijos SI"
+    },
+    // --- Dificultad: Medio ---
+    {
+        question: "Un nanómetro (nm) equivale a:",
+        options: ["$10^{-3}$ metros (milímetro)", "$10^{-6}$ metros (micrómetro)", "$10^{-9}$ metros (nanómetro)", "$10^{-12}$ metros (picómetro)"],
+        answer: 2,
+        explanation: "El prefijo 'nano' (n) significa $10^{-9}$. Por lo tanto, 1 nanómetro = $10^{-9}$ metros.",
+        difficulty: 'medium',
+        topic: "Prefijos SI"
+    },
+    {
+        question: "¿Cuál es el símbolo y factor del prefijo 'micro'?",
+        options: ["m, $10^{-3}$", "$\mu$, $10^{-6}$", "n, $10^{-9}$", "p, $10^{-12}$"],
+        answer: 1,
+        explanation: "El prefijo 'micro' tiene el símbolo $\mu$ (letra griega mu) y representa un factor de $10^{-6}$ (la millonésima parte).",
+        difficulty: 'medium',
+        topic: "Prefijos SI"
+    },
+    {
+        question: "Si una memoria USB tiene una capacidad de 64 Gigabytes (GB), ¿cuántos bytes son aproximadamente? (Considera $1 GB = 10^9 B$)",
+        options: ["$64 \times 10^3$ bytes", "$64 \times 10^6$ bytes", "$64 \times 10^9$ bytes", "$64 \times 10^{12}$ bytes"],
+        answer: 2,
+        explanation: "El prefijo 'Giga' (G) representa $10^9$. Por lo tanto, 64 GB = $64 \times 10^9$ bytes.",
+        difficulty: 'medium',
+        topic: "Prefijos SI"
+    },
+    {
+        question: "Convertir 0.052 kilogramos (kg) a miligramos (mg).",
+        options: ["52 mg", "520 mg", "5200 mg", "52000 mg"],
+        answer: 3,
+        explanation: "$0.052 \text{ kg} = 0.052 \times 1000 \text{ g} = 52 \text{ g}$. Luego, $52 \text{ g} = 52 \times 1000 \text{ mg} = 52000 \text{ mg}$. O directamente: $0.052 \text{ kg} \times (10^6 \text{ mg} / 1 \text{ kg}) = 52000 \text{ mg}$.",
+        difficulty: 'medium',
+        topic: "Prefijos SI"
+    },
+    // --- Dificultad: Difícil ---
+    {
+        question: "¿Cuántos picosegundos (ps) hay en un microsegundo ($\mu s$)?",
+        options: ["$10^3$", "$10^6$", "$10^9$", "$10^{-6}$"],
+        answer: 1,
+        explanation: "1 $\mu s = 10^{-6} s$. 1 $ps = 10^{-12} s$. Para convertir $\mu s$ a $ps$, dividimos el factor de micro por el factor de pico: $10^{-6} / 10^{-12} = 10^{-6 - (-12)} = 10^{6}$. Hay $10^6$ picosegundos en 1 microsegundo.",
+        difficulty: 'hard',
+        topic: "Prefijos SI"
+    },
+    {
+        question: "La frecuencia de una onda de radio es de 300 MHz (MegaHertz). Expresar esta frecuencia en GigaHertz (GHz).",
+        options: ["0.03 GHz", "0.3 GHz", "3 GHz", "30 GHz"],
+        answer: 1,
+        explanation: "Mega (M) es $10^6$ y Giga (G) es $10^9$. $300 \text{ MHz} = 300 \times 10^6 \text{ Hz}$. Para convertir a GHz, dividimos por $10^9$: $(300 \times 10^6) / 10^9 = 300 \times 10^{-3} = 0.3 \text{ GHz}$.",
+        difficulty: 'hard',
+        topic: "Prefijos SI"
+    },
+    {
+        question: "Un condensador tiene una capacidad de 2500 picofaradios (pF). ¿Cuál es su capacidad en microfaradios ($\mu F$)?",
+        options: ["$2.5 \times 10^{-3} \mu F$", "$0.025 \mu F$", "$0.25 \mu F$", "$2.5 \mu F$"],
+        answer: 0,
+        explanation: "Pico (p) es $10^{-12}$ y Micro ($\mu$) es $10^{-6}$. $2500 \text{ pF} = 2500 \times 10^{-12} \text{ F}$. Para convertir a $\mu F$, dividimos por $10^{-6}$: $(2500 \times 10^{-12}) / 10^{-6} = 2500 \times 10^{-6} \mu F = 2.5 \times 10^3 \times 10^{-6} \mu F = 2.5 \times 10^{-3} \mu F$.",
+        difficulty: 'hard',
+        topic: "Prefijos SI"
+    },
+    {
+        question: "La longitud de onda de cierta luz es 0.55 micrómetros ($\mu m$). ¿Cuántos Angstroms ($\AA$) son, sabiendo que $1 \AA = 10^{-10} m$?",
+        options: ["$5.5 \AA$", "$55 \AA$", "$550 \AA$", "$5500 \AA$"],
+        answer: 3,
+        explanation: "$0.55 \mu m = 0.55 \times 10^{-6} m$. Para convertir a Angstroms, dividimos por $10^{-10} m/\AA$: $(0.55 \times 10^{-6} m) / (10^{-10} m/\AA) = 0.55 \times 10^4 \AA = 5500 \AA$.",
+        difficulty: 'hard',
+        topic: "Prefijos SI"
+    },
+
+    // ------------------------------------------------------------------------------------
+    // TEMA: CINEMÁTICA (Conceptos Generales)
+    // ------------------------------------------------------------------------------------
+    // --- Dificultad: Fácil ---
+    {
+        question: "¿Qué estudia la cinemática?",
+        options: ["Las causas que originan el movimiento", "El movimiento de los cuerpos sin atender a las causas que lo producen", "Las fuerzas y el equilibrio estático de los cuerpos", "La energía asociada al movimiento y a la posición"],
+        answer: 1,
+        explanation: "La cinemática es la rama de la mecánica que describe el movimiento de los objetos sólidos sin considerar las causas (fuerzas) que lo originan; se limita principalmente al estudio de la trayectoria en función del tiempo.",
+        difficulty: 'easy',
+        topic: "Cinemática"
+    },
+    {
+        question: "Un punto material o partícula en física es un objeto que...",
+        options: ["Tiene masa pero no volumen", "Tiene dimensiones despreciables en comparación con las distancias analizadas", "No tiene masa ni volumen", "Siempre se mueve en línea recta"],
+        answer: 1,
+        explanation: "En cinemática, a menudo se modela un objeto como una partícula o punto material si sus dimensiones son irrelevantes para la descripción de su movimiento.",
+        difficulty: 'easy',
+        topic: "Cinemática"
+    },
+    {
+        question: "El concepto de 'posición' de un móvil requiere especificar un...",
+        options: ["Sistema de referencia", "Intervalo de tiempo", "Tipo de fuerza aplicada", "Valor de su masa"],
+        answer: 0,
+        explanation: "La posición de un objeto se define siempre con respecto a un sistema de referencia o coordenado.",
+        difficulty: 'easy',
+        topic: "Cinemática"
+    },
+    {
+        question: "La 'distancia recorrida' por un móvil es siempre:",
+        options: ["Igual al módulo del desplazamiento", "Una magnitud vectorial", "Una cantidad positiva o cero", "Menor o igual al módulo del desplazamiento"],
+        answer: 2,
+        explanation: "La distancia recorrida es la longitud total del camino seguido por el móvil, por lo que siempre es una cantidad positiva o cero. Puede ser mayor que el módulo del desplazamiento si la trayectoria no es recta.",
+        difficulty: 'easy',
+        topic: "Cinemática"
+    },
+    // --- Dificultad: Medio ---
+    {
+        question: "La trayectoria de un móvil es:",
+        options: ["Siempre una línea recta", "La distancia total recorrida entre dos puntos", "El camino o línea geométrica que describe al moverse", "Su velocidad instantánea en cada punto"],
+        answer: 2,
+        explanation: "La trayectoria es la curva que une las sucesivas posiciones ocupadas por un móvil a lo largo del tiempo.",
+        difficulty: 'medium',
+        topic: "Cinemática"
+    },
+    {
+        question: "La velocidad media se define como:",
+        options: ["La distancia recorrida dividida por el tiempo empleado", "El desplazamiento dividido por el intervalo de tiempo", "El promedio de las velocidades instantáneas", "La rapidez en un instante específico"],
+        answer: 1,
+        explanation: "La velocidad media es una magnitud vectorial definida como el cociente entre el vector desplazamiento ($\Delta\vec{r}$) y el intervalo de tiempo ($\Delta t$) empleado en realizarlo: $\vec{v}_m = \Delta\vec{r} / \Delta t$.",
+        difficulty: 'medium',
+        topic: "Cinemática"
+    },
+    {
+        question: "Si un coche da una vuelta completa a una pista circular de radio R y vuelve al punto de partida, su desplazamiento es:",
+        options: ["$2\pi R$", "$0$", "$\pi R$", "Depende de su velocidad"],
+        answer: 1,
+        explanation: "El desplazamiento es el vector que une la posición inicial con la final. Si el punto inicial y final coinciden, el vector desplazamiento es nulo (cero).",
+        difficulty: 'medium',
+        topic: "Cinemática"
+    },
+    {
+        question: "La aceleración instantánea mide:",
+        options: ["El cambio de posición por unidad de tiempo", "La rapidez con la que cambia la velocidad en un instante", "La distancia total recorrida", "La velocidad media en un intervalo muy pequeño"],
+        answer: 1,
+        explanation: "La aceleración instantánea es el límite de la aceleración media cuando el intervalo de tiempo tiende a cero, representando cómo cambia la velocidad en un instante dado. Es la derivada de la velocidad respecto al tiempo.",
+        difficulty: 'medium',
+        topic: "Cinemática"
+    },
+    // --- Dificultad: Difícil ---
+    {
+        question: "Un objeto se mueve de $x_1 = 2m$ a $x_2 = -3m$. ¿Cuál es su desplazamiento $\Delta x$ y la distancia recorrida si el movimiento fue siempre en la misma dirección (sin retroceder)?",
+        options: ["$\Delta x = -5m$, dist = $5m$", "$\Delta x = 5m$, dist = $5m$", "$\Delta x = -1m$, dist = $1m$", "$\Delta x = -5m$, dist = $1m$"],
+        answer: 0,
+        explanation: "Desplazamiento $\Delta x = x_2 - x_1 = -3m - 2m = -5m$. Si no retrocedió, la distancia recorrida es el valor absoluto del desplazamiento, $|-5m| = 5m$.",
+        difficulty: 'hard',
+        topic: "Cinemática"
+    },
+    {
+        question: "Si la velocidad de un cuerpo es constante y no nula, su aceleración es:",
+        options: ["Constante y no nula", "Variable", "Nula", "Igual a la velocidad"],
+        answer: 2,
+        explanation: "La aceleración se define como el cambio de la velocidad en el tiempo. Si la velocidad es constante (tanto en módulo como en dirección), no hay cambio, por lo tanto, la aceleración es nula.",
+        difficulty: 'hard',
+        topic: "Cinemática"
+    },
+    {
+        question: "La ecuación de posición de un móvil es $x(t) = 2t^3 - 5t^2 + 3t - 1$ (en unidades SI). ¿Cuál es su aceleración en $t=2s$?",
+        options: ["$12 m/s^2$", "$14 m/s^2$", "$24 m/s^2$", "$10 m/s^2$"],
+        answer: 1,
+        explanation: "Para hallar la aceleración, derivamos dos veces la posición respecto al tiempo. $v(t) = dx/dt = 6t^2 - 10t + 3$. $a(t) = dv/dt = 12t - 10$. En $t=2s$, $a(2) = 12(2) - 10 = 24 - 10 = 14 m/s^2$.",
+        difficulty: 'hard',
+        topic: "Cinemática"
+    },
+    {
+        question: "¿Puede un cuerpo tener velocidad cero en un instante y aun así estar acelerado?",
+        options: ["No, si la velocidad es cero, la aceleración también lo es.", "Sí, por ejemplo, en el punto más alto de un lanzamiento vertical.", "Solo si la masa es muy grande.", "Solo en el vacío."],
+        answer: 1,
+        explanation: "Sí. Un ejemplo clásico es un objeto lanzado verticalmente hacia arriba: en el punto más alto de su trayectoria, su velocidad instantánea es cero, pero sigue sometido a la aceleración de la gravedad.",
+        difficulty: 'hard',
+        topic: "Cinemática"
+    },
+
+    // ------------------------------------------------------------------------------------
+    // TEMA: MOVIMIENTO RECTILÍNEO UNIFORME (MRU)
+    // ------------------------------------------------------------------------------------
+    // --- Dificultad: Fácil ---
+    {
+        question: "En un Movimiento Rectilíneo Uniforme (MRU), la velocidad del móvil es...",
+        options: ["Constante", "Cero", "Variable y aumenta linealmente", "Variable y disminuye linealmente"],
+        answer: 0,
+        explanation: "La característica principal del MRU es que la velocidad es constante en magnitud, dirección y sentido. Esto implica que la aceleración es nula.",
+        difficulty: 'easy',
+        topic: "MRU"
+    },
+    {
+        question: "La ecuación que describe la posición $x$ en función del tiempo $t$ para un MRU es:",
+        options: ["$x(t) = v_0 t + (1/2)at^2$", "$x(t) = x_0 + vt$", "$x(t) = x_0 + v_0t + (1/2)at^2$", "$v(t) = v_0 + at$"],
+        answer: 1,
+        explanation: "En un MRU, la posición final es igual a la posición inicial más el producto de la velocidad constante por el tiempo transcurrido: $x(t) = x_0 + vt$.",
+        difficulty: 'easy',
+        topic: "MRU"
+    },
+    {
+        question: "Si un coche se mueve con MRU a $20 m/s$ durante $5 s$, ¿qué distancia recorre?",
+        options: ["$4 m$", "$25 m$", "$100 m$", "$500 m$"],
+        answer: 2,
+        explanation: "En MRU, distancia = velocidad × tiempo. $d = (20 m/s) \times (5 s) = 100 m$.",
+        difficulty: 'easy',
+        topic: "MRU"
+    },
+    {
+        question: "La gráfica de posición contra tiempo ($x$ vs $t$) para un MRU es una:",
+        options: ["Parábola", "Línea recta horizontal", "Línea recta con pendiente constante", "Curva exponencial"],
+        answer: 2,
+        explanation: "Dado que $x(t) = x_0 + vt$, la relación entre $x$ y $t$ es lineal. La pendiente de esta recta representa la velocidad constante.",
+        difficulty: 'easy',
+        topic: "MRU"
+    },
+    // --- Dificultad: Medio ---
+    {
+        question: "Un coche viaja a 72 km/h (MRU). ¿Qué distancia recorre en 10 segundos?",
+        options: ["720 m", "200 m", "20 m", "7.2 m"],
+        answer: 1,
+        explanation: "Primero, convertimos la velocidad a m/s: $72 \text{ km/h} = 72 \times (1000 \text{ m} / 1 \text{ km}) \times (1 \text{ h} / 3600 \text{ s}) = 20 \text{ m/s}$. Luego, distancia $d = v \cdot t = (20 \text{ m/s}) \cdot (10 \text{ s}) = 200 \text{ m}$.",
+        difficulty: 'medium',
+        topic: "MRU"
+    },
+    {
+        question: "Un tren recorre $300 km$ en $2.5$ horas con MRU. ¿Cuál es su velocidad en km/h?",
+        options: ["75 km/h", "100 km/h", "120 km/h", "150 km/h"],
+        answer: 2,
+        explanation: "Velocidad $v = d/t = 300 \text{ km} / 2.5 \text{ h} = 120 \text{ km/h}$.",
+        difficulty: 'medium',
+        topic: "MRU"
+    },
+    {
+        question: "Dos móviles A y B parten del mismo punto y se mueven en la misma dirección con MRU. Si $v_A = 10 m/s$ y $v_B = 15 m/s$, ¿cuál es la distancia que los separa después de 20 segundos?",
+        options: ["50 m", "100 m", "200 m", "300 m"],
+        answer: 1,
+        explanation: "Distancia de A: $d_A = 10 m/s \times 20 s = 200 m$. Distancia de B: $d_B = 15 m/s \times 20 s = 300 m$. La separación es $d_B - d_A = 300 m - 200 m = 100 m$.",
+        difficulty: 'medium',
+        topic: "MRU"
+    },
+    {
+        question: "La gráfica de velocidad contra tiempo ($v$ vs $t$) para un MRU es una:",
+        options: ["Línea recta con pendiente positiva", "Línea recta horizontal", "Línea recta con pendiente negativa", "Parábola"],
+        answer: 1,
+        explanation: "En un MRU, la velocidad es constante, por lo que su representación gráfica frente al tiempo es una línea recta horizontal (pendiente cero).",
+        difficulty: 'medium',
+        topic: "MRU"
+    },
+    // --- Dificultad: Difícil ---
+    {
+        question: "Dos trenes parten de dos ciudades A y B distantes 300 km, uno hacia el otro. El de A va a 60 km/h y el de B a 40 km/h. ¿Cuánto tardan en encontrarse si parten simultáneamente?",
+        options: ["2 horas", "2.5 horas", "3 horas", "5 horas"],
+        answer: 2,
+        explanation: "La velocidad relativa de acercamiento es la suma de sus velocidades: $v_{rel} = 60 \text{ km/h} + 40 \text{ km/h} = 100 \text{ km/h}$. El tiempo de encuentro es $t = d / v_{rel} = 300 \text{ km} / 100 \text{ km/h} = 3 \text{ horas}$.",
+        difficulty: 'hard',
+        topic: "MRU"
+    },
+    {
+        question: "Un coche parte del reposo y se mueve con MRU a $15 m/s$. Otro coche, que está $60 m$ adelante, parte en el mismo instante y en la misma dirección con MRU a $10 m/s$. ¿En qué instante alcanzará el primer coche al segundo?",
+        options: ["6 s", "8 s", "10 s", "12 s"],
+        answer: 3,
+        explanation: "Sea $t$ el tiempo de alcance. Posición del primer coche: $x_1 = 15t$. Posición del segundo coche: $x_2 = 60 + 10t$. En el alcance, $x_1 = x_2 \Rightarrow 15t = 60 + 10t \Rightarrow 5t = 60 \Rightarrow t = 12 s$.",
+        difficulty: 'hard',
+        topic: "MRU"
+    },
+    {
+        question: "Un río fluye a $3 m/s$. Un bote cruza el río perpendicularmente a la corriente con una velocidad relativa al agua de $4 m/s$. Si el ancho del río es de $120 m$, ¿cuánto tiempo tarda el bote en cruzar?",
+        options: ["24 s", "30 s", "40 s", "50 s"],
+        answer: 1,
+        explanation: "El tiempo para cruzar el río depende solo de la componente de la velocidad del bote perpendicular a la corriente y del ancho del río. $t = \text{ancho} / v_{\text{bote_perp}} = 120 m / 4 m/s = 30 s$. La velocidad de la corriente afecta dónde llega en la otra orilla, pero no el tiempo de cruce.",
+        difficulty: 'hard',
+        topic: "MRU"
+    },
+    {
+        question: "La posición de una partícula que se mueve con MRU está dada por $x(t) = 5 - 2t$ (en metros, $t$ en segundos). ¿Cuál es su velocidad y su posición inicial?",
+        options: ["$v = 5 m/s, x_0 = -2 m$", "$v = -2 m/s, x_0 = 5 m$", "$v = 2 m/s, x_0 = 5 m$", "$v = -5 m/s, x_0 = 2 m$"],
+        answer: 1,
+        explanation: "La ecuación general del MRU es $x(t) = x_0 + vt$. Comparando con $x(t) = 5 - 2t$, identificamos que la posición inicial $x_0 = 5 m$ y la velocidad constante $v = -2 m/s$.",
+        difficulty: 'hard',
+        topic: "MRU"
+    },
+
+
+    // ------------------------------------------------------------------------------------
+    // TEMA: MOVIMIENTO RECTILÍNEO UNIFORMEMENTE ACELERADO (MRUA)
+    // ------------------------------------------------------------------------------------
+    // --- Dificultad: Fácil ---
+    {
+        question: "En un Movimiento Rectilíneo Uniformemente Acelerado (MRUA), la aceleración es...",
+        options: ["Nula", "Constante y no nula", "Variable, aumentando con el tiempo", "Variable, disminuyendo con el tiempo"],
+        answer: 1,
+        explanation: "La característica principal del MRUA es que la aceleración es constante y diferente de cero. Esto significa que la velocidad cambia a un ritmo constante.",
+        difficulty: 'easy',
+        topic: "MRUA"
+    },
+    {
+        question: "Si un objeto en MRUA parte del reposo, su velocidad después de un tiempo $t$ es:",
+        options: ["$v_f = at$", "$v_f = v_0 - at$", "$v_f = (1/2)at^2$", "$v_f = a/t$"],
+        answer: 0,
+        explanation: "La ecuación de velocidad en MRUA es $v_f = v_0 + at$. Si parte del reposo, $v_0 = 0$, entonces $v_f = at$.",
+        difficulty: 'easy',
+        topic: "MRUA"
+    },
+    {
+        question: "La gráfica de velocidad contra tiempo ($v$ vs $t$) para un MRUA es una:",
+        options: ["Línea recta horizontal", "Parábola", "Línea recta con pendiente constante (no necesariamente cero)", "Hipérbola"],
+        answer: 2,
+        explanation: "Dado que $v(t) = v_0 + at$, la relación entre $v$ y $t$ es lineal. La pendiente de esta recta representa la aceleración constante.",
+        difficulty: 'easy',
+        topic: "MRUA"
+    },
+    {
+        question: "Si la aceleración de un móvil es positiva y su velocidad inicial es positiva, el móvil está:",
+        options: ["Frenando", "Moviéndose con velocidad constante", "Acelerando (aumentando su rapidez)", "En reposo"],
+        answer: 2,
+        explanation: "Si la aceleración y la velocidad tienen el mismo signo, el módulo de la velocidad (rapidez) aumenta, es decir, el móvil acelera.",
+        difficulty: 'easy',
+        topic: "MRUA"
+    },
+    // --- Dificultad: Medio ---
+    {
+        question: "Un objeto parte del reposo con una aceleración constante de $2 m/s^2$. ¿Qué velocidad tendrá después de 5 segundos?",
+        options: ["$2 m/s$", "$5 m/s$", "$10 m/s$", "$25 m/s$"],
+        answer: 2,
+        explanation: "Usamos la ecuación $v_f = v_0 + at$. Como $v_0=0$ (parte del reposo), $a = 2 m/s^2$ y $t = 5 s$, entonces $v_f = (0) + (2 m/s^2)(5 s) = 10 m/s$.",
+        difficulty: 'medium',
+        topic: "MRUA"
+    },
+    {
+        question: "Un coche acelera de $10 m/s$ a $30 m/s$ en $4 s$. ¿Cuál es su aceleración media?",
+        options: ["$2.5 m/s^2$", "$5 m/s^2$", "$7.5 m/s^2$", "$10 m/s^2$"],
+        answer: 1,
+        explanation: "Aceleración $a = (v_f - v_0) / t = (30 m/s - 10 m/s) / 4 s = 20 m/s / 4 s = 5 m/s^2$.",
+        difficulty: 'medium',
+        topic: "MRUA"
+    },
+    {
+        question: "Un móvil parte del reposo y acelera a $3 m/s^2$. ¿Qué distancia recorre en los primeros 4 segundos?",
+        options: ["$6 m$", "$12 m$", "$18 m$", "$24 m$"],
+        answer: 3,
+        explanation: "Usamos $x = v_0t + (1/2)at^2$. Con $v_0=0$, $x = (1/2)(3 m/s^2)(4 s)^2 = (1/2)(3)(16) = 24 m$.",
+        difficulty: 'medium',
+        topic: "MRUA"
+    },
+    {
+        question: "La gráfica de posición contra tiempo ($x$ vs $t$) para un MRUA es una:",
+        options: ["Línea recta", "Parábola", "Hipérbola", "Exponencial"],
+        answer: 1,
+        explanation: "La ecuación de posición en MRUA es $x(t) = x_0 + v_0t + (1/2)at^2$, que es una ecuación cuadrática en $t$. Su representación gráfica es una parábola.",
+        difficulty: 'medium',
+        topic: "MRUA"
+    },
+    // --- Dificultad: Difícil ---
+    {
+        question: "Un coche que viaja a $20 m/s$ frena uniformemente hasta detenerse en $50 m$. ¿Cuál fue su aceleración (desaceleración)?",
+        options: ["$-2 m/s^2$", "$-4 m/s^2$", "$-5 m/s^2$", "$-8 m/s^2$"],
+        answer: 1,
+        explanation: "Usamos la ecuación $v_f^2 = v_0^2 + 2ad$. Aquí $v_f=0$ (se detiene), $v_0=20 m/s$, $d=50 m$. Entonces, $0^2 = (20 m/s)^2 + 2a(50 m) \Rightarrow 0 = 400 + 100a \Rightarrow 100a = -400 \Rightarrow a = -4 m/s^2$.",
+        difficulty: 'hard',
+        topic: "MRUA"
+    },
+    {
+        question: "Un objeto se mueve con una aceleración constante. Si su velocidad cambia de $5 m/s$ a $15 m/s$ mientras recorre $25 m$, ¿cuál es el valor de su aceleración?",
+        options: ["$2 m/s^2$", "$3 m/s^2$", "$4 m/s^2$", "$5 m/s^2$"],
+        answer: 2,
+        explanation: "Usamos $v_f^2 = v_0^2 + 2ad$. $(15)^2 = (5)^2 + 2a(25) \Rightarrow 225 = 25 + 50a \Rightarrow 200 = 50a \Rightarrow a = 4 m/s^2$.",
+        difficulty: 'hard',
+        topic: "MRUA"
+    },
+    {
+        question: "Un tren parte del reposo y acelera uniformemente. En el quinto segundo de su movimiento recorre $9 m$. ¿Cuál es su aceleración?",
+        options: ["$1 m/s^2$", "$1.5 m/s^2$", "$2 m/s^2$", "$2.5 m/s^2$"],
+        answer: 2,
+        explanation: "Distancia en el n-ésimo segundo: $d_n = v_0 + a(n - 1/2)$. Aquí $v_0=0$, $n=5$, $d_5=9m$. $9 = 0 + a(5 - 0.5) \Rightarrow 9 = a(4.5) \Rightarrow a = 9/4.5 = 2 m/s^2$.",
+        difficulty: 'hard',
+        topic: "MRUA"
+    },
+    {
+        question: "La velocidad de una partícula está dada por $v(t) = (12 - 4t) m/s$. Si en $t=0$, $x=0$, ¿cuál es su posición en $t=5s$?",
+        options: ["$10 m$", "$15 m$", "$20 m$", "$25 m$"],
+        answer: 0,
+        explanation: "La posición es la integral de la velocidad: $x(t) = \int v(t)dt = \int (12 - 4t)dt = 12t - 2t^2 + C$. Como $x(0)=0$, entonces $C=0$. Así, $x(t) = 12t - 2t^2$. En $t=5s$, $x(5) = 12(5) - 2(5)^2 = 60 - 2(25) = 60 - 50 = 10 m$.",
+        difficulty: 'hard',
+        topic: "MRUA"
+    },
+
+    // ------------------------------------------------------------------------------------
+    // TEMA: MOVIMIENTO VERTICAL CON GRAVEDAD (Caída Libre y Lanzamiento Vertical)
+    // ------------------------------------------------------------------------------------
+    // --- Dificultad: Fácil ---
+    {
+        question: "En ausencia de resistencia del aire, todos los objetos en caída libre cerca de la superficie terrestre caen con la misma...",
+        options: ["Velocidad inicial", "Aceleración (g)", "Distancia en el primer segundo", "Masa"],
+        answer: 1,
+        explanation: "En caída libre ideal (sin resistencia del aire), la aceleración debida a la gravedad (g) es constante para todos los objetos, independientemente de su masa. Su valor aproximado es $9.8 m/s^2$ (o $10 m/s^2$ para simplificar).",
+        difficulty: 'easy',
+        topic: "Vertical"
+    },
+    {
+        question: "Cuando un objeto se lanza verticalmente hacia arriba, en el punto más alto de su trayectoria, su velocidad instantánea es:",
+        options: ["Máxima", "Cero", "Igual a g", "Constante"],
+        answer: 1,
+        explanation: "En el punto más alto de un lanzamiento vertical, el objeto momentáneamente deja de subir antes de empezar a caer. En ese instante, su velocidad vertical es cero.",
+        difficulty: 'easy',
+        topic: "Vertical"
+    },
+    {
+        question: "Si se deja caer un objeto desde el reposo, su velocidad después de 1 segundo de caída (usando $g \approx 10 m/s^2$) es aproximadamente:",
+        options: ["$5 m/s$", "$10 m/s$", "$15 m/s$", "$20 m/s$"],
+        answer: 1,
+        explanation: "En caída libre, $v_f = v_0 + gt$. Si $v_0=0$, entonces $v_f = gt = (10 m/s^2)(1 s) = 10 m/s$.",
+        difficulty: 'easy',
+        topic: "Vertical"
+    },
+    {
+        question: "La aceleración de un objeto en caída libre (despreciando la resistencia del aire) es:",
+        options: ["Positiva hacia arriba", "Negativa hacia abajo (si se toma eje Y positivo hacia arriba)", "Cero", "Dependiente de la masa del objeto"],
+        answer: 1,
+        explanation: "La aceleración de la gravedad siempre actúa hacia abajo. Si se define el eje Y positivo hacia arriba, entonces $g$ se considera negativa (aprox. $-9.8 m/s^2$).",
+        difficulty: 'easy',
+        topic: "Vertical"
+    },
+    // --- Dificultad: Medio ---
+    {
+        question: "Se deja caer un objeto desde una altura de $20 m$. ¿Cuánto tiempo tarda en llegar al suelo? (Usar $g \approx 10 m/s^2$)",
+        options: ["1 s", "$\sqrt{2}$ s ($\approx 1.41 s$)", "2 s", "4 s"],
+        answer: 2,
+        explanation: "Usamos la ecuación de posición para caída libre: $h = v_0t + (1/2)gt^2$. Como parte del reposo, $v_0=0$. Entonces, $20 m = (1/2)(10 m/s^2)t^2 \Rightarrow 20 = 5t^2 \Rightarrow t^2 = 4 \Rightarrow t = 2 s$.",
+        difficulty: 'medium',
+        topic: "Vertical"
+    },
+    {
+        question: "Un objeto es lanzado verticalmente hacia arriba con una velocidad inicial de $30 m/s$. ¿Cuánto tiempo tarda en alcanzar su altura máxima? (Usar $g \approx 10 m/s^2$)",
+        options: ["1.5 s", "2 s", "3 s", "6 s"],
+        answer: 2,
+        explanation: "En la altura máxima, la velocidad final $v_f = 0$. Usamos $v_f = v_0 - gt \Rightarrow 0 = 30 m/s - (10 m/s^2)t \Rightarrow 10t = 30 \Rightarrow t = 3 s$.",
+        difficulty: 'medium',
+        topic: "Vertical"
+    },
+    {
+        question: "Desde lo alto de un edificio se lanza una piedra verticalmente hacia abajo con una velocidad de $5 m/s$. Si llega al suelo en $3 s$, ¿cuál es la altura del edificio? (Usar $g \approx 10 m/s^2$)",
+        options: ["$45 m$", "$50 m$", "$60 m$", "$75 m$"],
+        answer: 2,
+        explanation: "Usamos $h = v_0t + (1/2)gt^2$. $h = (5 m/s)(3 s) + (1/2)(10 m/s^2)(3 s)^2 = 15 m + (1/2)(10)(9) m = 15 m + 45 m = 60 m$.",
+        difficulty: 'medium',
+        topic: "Vertical"
+    },
+    {
+        question: "Si un objeto tarda 4 segundos en caer libremente desde el reposo, ¿con qué velocidad impacta el suelo? (Usar $g \approx 10 m/s^2$)",
+        options: ["$20 m/s$", "$30 m/s$", "$40 m/s$", "$80 m/s$"],
+        answer: 2,
+        explanation: "$v_f = v_0 + gt$. Con $v_0=0$, $v_f = (10 m/s^2)(4 s) = 40 m/s$.",
+        difficulty: 'medium',
+        topic: "Vertical"
+    },
+    // --- Dificultad: Difícil ---
+    {
+        question: "Se lanza una pelota verticalmente hacia arriba con $30 m/s$. ¿Qué altura máxima alcanza? (Usar $g \approx 10 m/s^2$)",
+        options: ["15 m", "30 m", "45 m", "90 m"],
+        answer: 2,
+        explanation: "En la altura máxima, $v_f=0$. Usamos la ecuación $v_f^2 = v_0^2 - 2gh$ (tomando g positiva y el signo menos por la dirección). $0^2 = (30 m/s)^2 - 2(10 m/s^2)h \Rightarrow 0 = 900 - 20h \Rightarrow 20h = 900 \Rightarrow h = 45 m$.",
+        difficulty: 'hard',
+        topic: "Vertical"
+    },
+    {
+        question: "Un objeto se deja caer desde una altura H. Tarda un tiempo T en llegar al suelo. ¿Desde qué altura se debería dejar caer para que tarde 2T en llegar al suelo?",
+        options: ["$\sqrt{2}H$", "$2H$", "$4H$", "$H/2$"],
+        answer: 2,
+        explanation: "Para caída libre, $H = (1/2)gT^2$. Si el tiempo es $2T$, la nueva altura $H' = (1/2)g(2T)^2 = (1/2)g(4T^2) = 4 \times [(1/2)gT^2] = 4H$.",
+        difficulty: 'hard',
+        topic: "Vertical"
+    },
+    {
+        question: "Se lanza un cuerpo verticalmente hacia arriba. Si su altura máxima es de $20 m$, ¿con qué velocidad inicial fue lanzado? (Usar $g \approx 10 m/s^2$)",
+        options: ["$10 m/s$", "$14.14 m/s$", "$20 m/s$", "$40 m/s$"],
+        answer: 2,
+        explanation: "En altura máxima $v_f=0$. $v_f^2 = v_0^2 - 2gh \Rightarrow 0 = v_0^2 - 2(10)(20) \Rightarrow v_0^2 = 400 \Rightarrow v_0 = \sqrt{400} = 20 m/s$.",
+        difficulty: 'hard',
+        topic: "Vertical"
+    },
+    {
+        question: "Desde un globo que asciende verticalmente con una velocidad constante de $5 m/s$, se deja caer un objeto cuando el globo está a $30 m$ de altura. ¿Cuánto tiempo tarda el objeto en llegar al suelo? (Usar $g \approx 10 m/s^2$)",
+        options: ["2 s", "2.5 s", "3 s", "3.5 s"],
+        answer: 2,
+        explanation: "La velocidad inicial del objeto es $v_0 = +5 m/s$ (hacia arriba). Usamos $y_f = y_0 + v_0t - (1/2)gt^2$. Tomando $y_f=0$ (suelo) y $y_0=30m$: $0 = 30 + 5t - (1/2)(10)t^2 \Rightarrow 0 = 30 + 5t - 5t^2 \Rightarrow 5t^2 - 5t - 30 = 0 \Rightarrow t^2 - t - 6 = 0$. Factorizando: $(t-3)(t+2)=0$. La solución positiva es $t=3s$.",
+        difficulty: 'hard',
+        topic: "Vertical"
+    },
+
+    // ------------------------------------------------------------------------------------
+    // TEMA: MOVIMIENTO CIRCULAR UNIFORME (MCU)
+    // ------------------------------------------------------------------------------------
+    // --- Dificultad: Fácil ---
+    {
+        question: "En un Movimiento Circular Uniforme (MCU), ¿qué magnitud permanece constante?",
+        options: ["La velocidad vectorial", "La aceleración vectorial", "La rapidez (módulo de la velocidad)", "La fuerza centrípeta"],
+        answer: 2,
+        explanation: "En el MCU, la rapidez (el valor numérico de la velocidad) es constante. Sin embargo, la dirección del vector velocidad cambia continuamente, por lo que la velocidad vectorial no es constante.",
+        difficulty: 'easy',
+        topic: "MCU"
+    },
+    {
+        question: "La aceleración en un MCU se denomina:",
+        options: ["Aceleración tangencial", "Aceleración angular", "Aceleración centrípeta (o normal)", "Aceleración gravitatoria"],
+        answer: 2,
+        explanation: "En un MCU, existe una aceleración dirigida hacia el centro de la trayectoria circular, llamada aceleración centrípeta o normal. Es responsable del cambio en la dirección de la velocidad.",
+        difficulty: 'easy',
+        topic: "MCU"
+    },
+    {
+        question: "El periodo (T) en un MCU es:",
+        options: ["El número de vueltas por segundo", "El tiempo que tarda en dar una vuelta completa", "La velocidad angular", "El radio de la trayectoria"],
+        answer: 1,
+        explanation: "El periodo es el tiempo empleado por el móvil en completar una revolución o vuelta completa.",
+        difficulty: 'easy',
+        topic: "MCU"
+    },
+    {
+        question: "La frecuencia (f) en un MCU se define como:",
+        options: ["El tiempo por vuelta", "El inverso del periodo ($1/T$)", "La velocidad lineal", "El ángulo barrido por unidad de tiempo"],
+        answer: 1,
+        explanation: "La frecuencia es el número de vueltas o revoluciones completadas por unidad de tiempo. Es la inversa del periodo: $f = 1/T$.",
+        difficulty: 'easy',
+        topic: "MCU"
+    },
+    // --- Dificultad: Medio ---
+    {
+        question: "Un objeto en MCU tiene una rapidez de $10 m/s$ en una trayectoria circular de radio $5 m$. ¿Cuál es su aceleración centrípeta $a_c$?",
+        options: ["$2 m/s^2$", "$5 m/s^2$", "$10 m/s^2$", "$20 m/s^2$"],
+        answer: 3,
+        explanation: "La aceleración centrípeta se calcula como $a_c = v^2/r$, donde $v$ es la rapidez y $r$ es el radio. $a_c = (10 m/s)^2 / (5 m) = 100 m^2/s^2 / 5 m = 20 m/s^2$.",
+        difficulty: 'medium',
+        topic: "MCU"
+    },
+    {
+        question: "Un disco gira con MCU completando 5 revoluciones en 10 segundos. ¿Cuál es su periodo T?",
+        options: ["0.5 s", "2 s", "5 s", "10 s"],
+        answer: 1,
+        explanation: "Si da 5 revoluciones en 10 segundos, el tiempo para 1 revolución (periodo) es $T = \text{tiempo total} / \text{número de vueltas} = 10 s / 5 \text{ rev} = 2 s/\text{rev}$.",
+        difficulty: 'medium',
+        topic: "MCU"
+    },
+    {
+        question: "Para el disco del problema anterior (5 rev en 10 s), ¿cuál es su frecuencia f?",
+        options: ["0.5 Hz", "2 Hz", "5 Hz", "0.2 Hz"],
+        answer: 0,
+        explanation: "Frecuencia $f = \text{número de vueltas} / \text{tiempo total} = 5 \text{ rev} / 10 s = 0.5 \text{ rev/s} = 0.5 \text{ Hz}$. También $f = 1/T = 1/(2s) = 0.5 Hz$.",
+        difficulty: 'medium',
+        topic: "MCU"
+    },
+    {
+        question: "La velocidad angular ($\omega$) se relaciona con la velocidad lineal ($v$) y el radio ($r$) mediante:",
+        options: ["$v = \omega / r$", "$\omega = v / r$", "$r = v \omega$", "$v = \omega^2 r$"],
+        answer: 1,
+        explanation: "La relación es $v = \omega r$. Por lo tanto, $\omega = v/r$. La velocidad angular se mide en radianes por segundo (rad/s).",
+        difficulty: 'medium',
+        topic: "MCU"
+    },
+    // --- Dificultad: Difícil ---
+    {
+        question: "Un coche toma una curva circular de $50 m$ de radio con una rapidez constante de $10 m/s$. Si la masa del coche es $1000 kg$, ¿cuál es la magnitud de la fuerza centrípeta que actúa sobre él?",
+        options: ["1000 N", "2000 N", "4000 N", "500 N"],
+        answer: 1,
+        explanation: "Primero calculamos la aceleración centrípeta: $a_c = v^2/r = (10 m/s)^2 / (50 m) = 100/50 = 2 m/s^2$. Luego, la fuerza centrípeta es $F_c = m \cdot a_c = (1000 kg)(2 m/s^2) = 2000 N$.",
+        difficulty: 'hard',
+        topic: "MCU"
+    },
+    {
+        question: "Un punto en el borde de un disco de $0.5 m$ de radio gira con una velocidad angular de $4\pi \text{ rad/s}$. ¿Cuál es su velocidad lineal?",
+        options: ["$\pi m/s$", "$2\pi m/s$", "$4\pi m/s$", "$8\pi m/s$"],
+        answer: 1,
+        explanation: "La velocidad lineal $v = \omega r = (4\pi \text{ rad/s})(0.5 m) = 2\pi m/s$.",
+        difficulty: 'hard',
+        topic: "MCU"
+    },
+    {
+        question: "Una partícula se mueve en un círculo con un periodo de $0.25 s$. ¿Cuál es su frecuencia angular (velocidad angular $\omega$)?",
+        options: ["$2\pi \text{ rad/s}$", "$4\pi \text{ rad/s}$", "$8\pi \text{ rad/s}$", "$\pi \text{ rad/s}$"],
+        answer: 2,
+        explanation: "La velocidad angular $\omega = 2\pi f$. La frecuencia $f = 1/T = 1/(0.25s) = 4 Hz$. Entonces, $\omega = 2\pi (4 Hz) = 8\pi \text{ rad/s}$.",
+        difficulty: 'hard',
+        topic: "MCU"
+    },
+    {
+        question: "Si la velocidad angular de un objeto en MCU se duplica y el radio de su trayectoria se mantiene constante, ¿cómo cambia su aceleración centrípeta?",
+        options: ["Se duplica", "Se cuadruplica", "Se reduce a la mitad", "No cambia"],
+        answer: 1,
+        explanation: "La aceleración centrípeta es $a_c = \omega^2 r$. Si $\omega$ se duplica a $2\omega$, la nueva aceleración $a_c' = (2\omega)^2 r = 4\omega^2 r = 4a_c$. Se cuadruplica.",
+        difficulty: 'hard',
+        topic: "MCU"
+    },
+
+    // ------------------------------------------------------------------------------------
+    // TEMA: MOVIMIENTO PARABÓLICO
+    // ------------------------------------------------------------------------------------
+    // --- Dificultad: Fácil ---
+    {
+        question: "El movimiento parabólico es la composición de dos movimientos independientes: uno horizontal __________ y uno vertical __________.",
+        options: ["MRU, MRUA (caída libre)", "MRUA, MRU", "MRU, MRU", "MRUA, MRUA"],
+        answer: 0,
+        explanation: "En ausencia de resistencia del aire, el movimiento horizontal es un MRU (velocidad horizontal constante) y el movimiento vertical es un MRUA (aceleración constante debida a la gravedad).",
+        difficulty: 'easy',
+        topic: "Parabólico"
+    },
+    {
+        question: "En un lanzamiento parabólico, la componente horizontal de la velocidad (despreciando la resistencia del aire):",
+        options: ["Aumenta con el tiempo", "Disminuye con el tiempo", "Permanece constante", "Es cero en el punto más alto"],
+        answer: 2,
+        explanation: "Como no hay fuerzas horizontales actuando (se desprecia la resistencia del aire), la aceleración horizontal es cero, y por lo tanto, la componente horizontal de la velocidad ($v_x$) es constante durante todo el vuelo.",
+        difficulty: 'easy',
+        topic: "Parabólico"
+    },
+    {
+        question: "En el punto más alto de una trayectoria parabólica, la componente vertical de la velocidad es:",
+        options: ["Máxima", "Mínima (pero no cero)", "Cero", "Igual a la componente horizontal"],
+        answer: 2,
+        explanation: "En el vértice de la parábola (altura máxima), el proyectil deja de subir verticalmente y comienza a bajar. En ese instante, su velocidad vertical $v_y = 0$.",
+        difficulty: 'easy',
+        topic: "Parabólico"
+    },
+    {
+        question: "El ángulo de lanzamiento que produce el mayor alcance horizontal para una velocidad inicial dada (en ausencia de resistencia del aire) es:",
+        options: ["30°", "45°", "60°", "90° (lanzamiento vertical)"],
+        answer: 1,
+        explanation: "Para una velocidad inicial fija y despreciando la resistencia del aire, el alcance horizontal máximo se logra con un ángulo de lanzamiento de 45° respecto a la horizontal.",
+        difficulty: 'easy',
+        topic: "Parabólico"
+    },
+    // --- Dificultad: Medio ---
+    {
+        question: "Un proyectil se lanza con una velocidad inicial $v_0 = 20 m/s$ y un ángulo de $30^\circ$ con la horizontal. ¿Cuál es la componente horizontal inicial de la velocidad $v_{0x}$? (sen 30°=0.5, cos 30°≈0.866)",
+        options: ["$10 m/s$", "$17.32 m/s$", "$20 m/s$", "$0 m/s$"],
+        answer: 1,
+        explanation: "La componente horizontal inicial es $v_{0x} = v_0 \cos\theta = (20 m/s) \cos(30^\circ) \approx (20 m/s)(0.866) \approx 17.32 m/s$.",
+        difficulty: 'medium',
+        topic: "Parabólico"
+    },
+    {
+        question: "Para el proyectil del problema anterior ($v_0 = 20 m/s$, $\theta = 30^\circ$), ¿cuál es la componente vertical inicial de la velocidad $v_{0y}$?",
+        options: ["$10 m/s$", "$17.32 m/s$", "$20 m/s$", "$0 m/s$"],
+        answer: 0,
+        explanation: "La componente vertical inicial es $v_{0y} = v_0 \sin\theta = (20 m/s) \sin(30^\circ) = (20 m/s)(0.5) = 10 m/s$.",
+        difficulty: 'medium',
+        topic: "Parabólico"
+    },
+    {
+        question: "Un balón es pateado con un ángulo de $60^\circ$ y alcanza una altura máxima de $15 m$. ¿Cuál fue la componente vertical inicial de su velocidad? (Usar $g \approx 10 m/s^2$)",
+        options: ["$10\sqrt{3} m/s$", "$15 m/s$", "$10 m/s$", "$5\sqrt{6} m/s$"],
+        answer: 0, // vf_y^2 = v0_y^2 - 2gh => 0 = v0_y^2 - 2*10*15 => v0_y^2 = 300 => v0_y = sqrt(300) = 10*sqrt(3)
+        explanation: "En la altura máxima $H$, $v_{fy}^2 = v_{0y}^2 - 2gH$. Como $v_{fy}=0$, tenemos $0 = v_{0y}^2 - 2gH \Rightarrow v_{0y}^2 = 2gH$. $v_{0y} = \sqrt{2gH} = \sqrt{2 \cdot 10 m/s^2 \cdot 15 m} = \sqrt{300} m/s = 10\sqrt{3} m/s \approx 17.32 m/s$.",
+        difficulty: 'medium',
+        topic: "Parabólico"
+    },
+    {
+        question: "La aceleración de un proyectil en movimiento parabólico (despreciando resistencia del aire) es:",
+        options: ["Cero en todo momento", "Constante y horizontal", "Constante y vertical hacia abajo (g)", "Variable"],
+        answer: 2,
+        explanation: "Una vez lanzado, la única fuerza significativa que actúa sobre el proyectil (si se desprecia la resistencia del aire) es la gravedad, que produce una aceleración constante $g$ dirigida verticalmente hacia abajo.",
+        difficulty: 'medium',
+        topic: "Parabólico"
+    },
+    // --- Dificultad: Difícil ---
+    {
+        question: "Un cañón dispara un proyectil con una velocidad inicial de $100 m/s$ y un ángulo de $53^\circ$ sobre la horizontal. ¿Cuánto tiempo tarda el proyectil en alcanzar su altura máxima? (sen 53°≈0.8, cos 53°≈0.6, $g \approx 10 m/s^2$)",
+        options: ["6 s", "8 s", "10 s", "12 s"],
+        answer: 1,
+        explanation: "La componente vertical inicial es $v_{0y} = v_0 \sin\theta = 100 m/s \cdot 0.8 = 80 m/s$. En la altura máxima, $v_{fy}=0$. Usamos $v_{fy} = v_{0y} - gt \Rightarrow 0 = 80 m/s - (10 m/s^2)t \Rightarrow 10t = 80 \Rightarrow t = 8 s$.",
+        difficulty: 'hard',
+        topic: "Parabólico"
+    },
+    {
+        question: "Para el proyectil del problema anterior ($v_0=100 m/s, \theta=53^\circ, t_{\text{subida}}=8s$), ¿cuál es el tiempo total de vuelo hasta que regresa al mismo nivel de lanzamiento?",
+        options: ["8 s", "12 s", "16 s", "20 s"],
+        answer: 2,
+        explanation: "En ausencia de resistencia del aire y si el punto de llegada está al mismo nivel que el de partida, el tiempo de subida es igual al tiempo de bajada. Tiempo total de vuelo $T = 2 \times t_{\text{subida}} = 2 \times 8 s = 16 s$.",
+        difficulty: 'hard',
+        topic: "Parabólico"
+    },
+    {
+        question: "Un bombardero vuela horizontalmente a una altura de $500 m$ con una velocidad de $100 m/s$. Suelta una bomba. ¿Qué distancia horizontal recorre la bomba antes de impactar el suelo? (Despreciar resistencia del aire, $g \approx 10 m/s^2$)",
+        options: ["500 m", "1000 m", "1500 m", "2000 m"],
+        answer: 1,
+        explanation: "Primero calculamos el tiempo de caída vertical: $h = (1/2)gt^2$ (ya que $v_{0y}=0$). $500 m = (1/2)(10 m/s^2)t^2 \Rightarrow 500 = 5t^2 \Rightarrow t^2 = 100 \Rightarrow t = 10 s$. Durante este tiempo, la bomba se mueve horizontalmente con $v_x = 100 m/s$. Alcance $X = v_x \cdot t = (100 m/s)(10 s) = 1000 m$.",
+        difficulty: 'hard',
+        topic: "Parabólico"
+    },
+    {
+        question: "Se lanza un proyectil con una velocidad inicial tal que su alcance horizontal máximo es de $160 m$. ¿Cuál fue la altura máxima alcanzada en ese lanzamiento? (Recuerda que el alcance máximo es para $\theta=45^\circ$ y $H_{max} = R_{max}/4$ para ese ángulo)",
+        options: ["20 m", "40 m", "80 m", "160 m"],
+        answer: 1,
+        explanation: "Para un ángulo de $45^\circ$, que da el alcance máximo ($R_{max}$), la altura máxima ($H_{max}$) está relacionada por $H_{max} = R_{max} / 4$. Entonces, $H_{max} = 160 m / 4 = 40 m$.",
+        difficulty: 'hard',
+        topic: "Parabólico"
+    }
+];
+
+// DATOS CURIOSOS DE FÍSICA (Se mantienen los que ya tenías)
+const physicsFacts = [
+    "El sonido no viaja en el vacío. 🌌",
+    "La luz del Sol ☀️ tarda ~8 min 20 s en llegar a la Tierra 🌍.",
+    "Un agujero negro ⚫ tiene gravedad tan fuerte que ni la luz escapa.",
+    "La Torre Eiffel 🗼 es más alta en verano por expansión térmica.",
+    "Una cucharadita de estrella de neutrones ⭐ pesa miles de millones de toneladas.",
+    "El efecto invernadero natural mantiene la Tierra habitable. Greenhouse effect! ♨️",
+    "Las auroras boreales/australes ✨ son causadas por partículas solares.",
+    "La fisión nuclear divide átomos; la fusión nuclear los une (como en el Sol). ⚛️",
+    "La antimateria existe y se aniquila con la materia. 💥",
+    "El universo se expande aceleradamente (debido a la energía oscura). 🌠"
+];
+
+        function getRandomFact() { return physicsFacts[Math.floor(Math.random() * physicsFacts.length)]; }
+
+        /**
+         * Obtiene una pregunta aleatoria filtrada por la dificultad actual.
+         * @returns {object|null} - El objeto de la pregunta o null si no hay disponibles.
+         */
+        function getQuestion() {
+            // Filtrar preguntas por dificultad adecuada para el nivel actual
+            const availableQuestions = physicsQuestions.filter(q =>
+                (currentDifficulty === 'easy' && q.difficulty === 'easy') ||
+                (currentDifficulty === 'medium' && (q.difficulty === 'easy' || q.difficulty === 'medium')) ||
+                (currentDifficulty === 'hard') // Dificultad 'hard' puede incluir todas las preguntas
+            );
+
+            let questionPool = availableQuestions;
+            if (availableQuestions.length > 1 && currentQuestionData) { // Evitar repetir la última si es posible
+                 questionPool = availableQuestions.filter(q => q.question !== currentQuestionData.question);
+                 if (questionPool.length === 0) questionPool = availableQuestions; // Si solo queda la repetida, usarla
+            }
+
+            if (questionPool.length === 0) { // Si no hay preguntas para la dificultad, usar cualquiera
+                console.warn("No hay preguntas disponibles para esta dificultad, usando cualquiera.");
+                questionPool = physicsQuestions;
+                if (questionPool.length === 0) return null; // No hay preguntas en absoluto
+            }
+
+            const randomIndex = Math.floor(Math.random() * questionPool.length);
+            return questionPool[randomIndex];
+        }
+
+
+        /**
+         * Verifica si se ha alcanzado el objetivo de preguntas para el nivel actual.
+         * @returns {boolean} - true si se completó, false en caso contrario.
+         */
+        function checkLevelCompletion() {
+             return questionsAnsweredThisLevel >= questionsTarget;
+        }
+
+
+        /**
+         * Muestra una pregunta en el modal.
+         * @param {string} [source='auto'] - Origen de la pregunta ('icon' si es por ítem, 'auto' si es por otra lógica).
+         */
+        function askQuestion(source = 'auto') {
+             if (gameOver || isModalVisible() || currentQuestionData !== null) {
+                 console.warn("Intento de abrir pregunta ❓ mientras otra está activa, juego terminado o modal visible.");
+                 // Si el juego está pausado pero fue por esta misma función (pregunta ya activa), permitir.
+                 // Si está pausado por el botón de pausa, no mostrar nueva pregunta.
+                 if(!questionModal.classList.contains('visible')) { // Solo retorna si no es el modal de pregunta el que está visible
+                    if (gamePaused && !questionModal.classList.contains('visible')) return;
+                 }
+             }
+
+             gamePaused = true; // Pausar el juego para la pregunta
+             playSound('questionAppear');
+
+             currentQuestionData = getQuestion(); // Obtener datos de la pregunta
+             if (!currentQuestionData) {
+                 console.error("No se pudo obtener una pregunta. 😭");
+                 gamePaused = false; // Reanudar si no hay pregunta
+                 return;
+             }
+
+             // Incrementar contadores
+             if (source === 'icon') { // Solo si viene de un ítem ❓
+                 questionsAnsweredThisLevel++;
+             }
+             totalQuestionsAnsweredGame++; // Contador global de preguntas respondidas
+
+             const questionTextElement = document.getElementById('question-text');
+             const questionCounterElement = document.getElementById('question-counter-modal');
+
+             if (questionTextElement) questionTextElement.innerHTML = currentQuestionData.question; // Usar innerHTML para MathJax
+             if (questionCounterElement) questionCounterElement.textContent = `Pregunta Nivel: ${questionsAnsweredThisLevel}/${questionsTarget}`;
+
+             const optionsContainer = document.getElementById('options-container');
+             if (optionsContainer) {
+                 optionsContainer.innerHTML = ''; // Limpiar opciones anteriores
+                 currentQuestionData.options.forEach((option, index) => {
+                     const button = document.createElement('button');
+                     button.innerHTML = option; // Usar innerHTML para MathJax en opciones
+                     button.classList.add('option-btn');
+                     button.onclick = () => handleAnswer(index);
+                     optionsContainer.appendChild(button);
+                 });
+             }
+
+             // Resetear y ocultar feedback
+             const feedbackContainer = document.getElementById('feedback-container');
+             const feedbackContent = document.getElementById('feedback-content');
+             const acceptFeedbackBtn = document.getElementById('accept-feedback-btn');
+             if (feedbackContainer) feedbackContainer.style.display = 'none';
+             if (feedbackContent) feedbackContent.innerHTML = '';
+             if (acceptFeedbackBtn) acceptFeedbackBtn.style.display = 'none';
+
+             showModal(questionModal); // Mostrar el modal
+             updateUI(); // Actualizar UI por si cambió el número de preguntas respondidas
+
+             // Indicar a MathJax que procese el nuevo contenido del modal
+             if (typeof MathJax !== "undefined" && MathJax.typesetPromise) {
+                MathJax.typesetPromise([questionModal]).catch(function (err) {
+                    console.error('Error al renderizar MathJax en pregunta:', err);
+                });
+             }
+        }
+
+
+        /**
+         * Maneja la respuesta seleccionada por el jugador.
+         * @param {number} selectedIndex - El índice de la opción seleccionada.
+         */
+        function handleAnswer(selectedIndex) {
+             if (!currentQuestionData) return;
+
+             const correctIndex = currentQuestionData.answer;
+             const isCorrect = selectedIndex === correctIndex;
+
+             const feedbackContainer = document.getElementById('feedback-container');
+             const feedbackContent = document.getElementById('feedback-content');
+             const optionsButtons = document.querySelectorAll('#options-container .option-btn');
+
+             // Deshabilitar botones y marcar visualmente
+             optionsButtons.forEach((button, index) => {
+                 button.disabled = true;
+                 if (index === correctIndex) button.classList.add('correct-option');
+                 else if (index === selectedIndex) button.classList.add('incorrect-option');
+             });
+
+             feedbackContent.innerHTML = ''; // Limpiar feedback anterior
+             const feedbackTitle = document.createElement('strong');
+             const explanationP = document.createElement('p');
+             explanationP.classList.add('explanation-text');
+             explanationP.innerHTML = currentQuestionData.explanation || ''; // Usar innerHTML para MathJax
+
+             if (isCorrect) {
+                 playSound('correctAnswer');
+                 feedbackContainer.className = 'feedback correct';
+                 feedbackTitle.textContent = "✅ ¡Correcto! 🎉";
+                 score += (50 + (level-1)*10) * (currentDifficulty === 'hard' ? 2 : (currentDifficulty === 'medium' ? 1.5 : 1)); // Puntos escalan
+                 questionsCorrectThisLevel++;
+                 totalQuestionsCorrectGame++; // Contador global
+             } else {
+                 playSound('incorrectAnswer');
+                 feedbackContainer.className = 'feedback incorrect';
+                 feedbackTitle.textContent = "❌ Incorrecto... 😥";
+                 const correctAnswerLabel = document.createElement('p');
+                 correctAnswerLabel.innerHTML = `<span class="correct-answer-label">Respuesta correcta:</span> ${currentQuestionData.options[correctIndex]}`; // Usar innerHTML
+                 feedbackContent.appendChild(correctAnswerLabel);
+             }
+
+             feedbackContent.prepend(feedbackTitle); // Añadir título al principio
+             feedbackContent.appendChild(explanationP);
+             feedbackContainer.style.display = 'block'; // Mostrar feedback
+
+             const acceptBtn = document.getElementById('accept-feedback-btn');
+             if (acceptBtn) {
+                 acceptBtn.style.display = 'block';
+                 acceptBtn.onclick = closeQuestionModal;
+             }
+
+             updateUI(); // Actualizar score en la UI
+
+             // Indicar a MathJax que procese el nuevo contenido del feedback
+             if (typeof MathJax !== "undefined" && MathJax.typesetPromise) {
+                MathJax.typesetPromise([feedbackContainer]).catch(function (err) {
+                    console.error('Error al renderizar MathJax en feedback:', err);
+                });
+             }
+        }
+
+
+        /**
+         * Cierra el modal de pregunta y continúa el juego o el flujo de nivel.
+         */
+        function closeQuestionModal() {
+             hideModal(questionModal);
+             currentQuestionData = null;
+
+             const questionsGoalReached = checkLevelCompletion();
+
+             if (questionsGoalReached && invaderGrid && invaderGrid.invaders.length === 0) {
+                 console.log("🎯 Objetivo de preguntas alcanzado y oleada limpia. ¡Terminando nivel! 🎉");
+                 triggerLevelComplete();
+             } else {
+                 // Si no se alcanzó el objetivo, o sí pero aún quedan invasores, reanudar juego.
+                 gamePaused = false;
+                 lastTime = performance.now(); // Evitar saltos de tiempo
+                 console.log("Pregunta cerrada, juego reanudado. ▶️");
+             }
+             updateUI(); // Asegurar que la UI refleje el estado
+        }
+
+        /**
+         * Genera el HTML para las estrellas de calificación.
+         * @param {number} rating - La calificación de 0 a 5.
+         * @returns {string} - El HTML de las estrellas.
+         */
+        function getRatingStarsHTML(rating) {
+            let starsHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                starsHTML += `<span class="${i <= rating ? 'star-filled' : 'star-empty'}">⭐</span>`;
+            }
+            return starsHTML;
+        }
+
+        // --- Funciones de Fin de Juego / Nivel ---
+
+        function triggerGameOver(message) {
+            if (gameOver) return;
+            console.log("☠️ Game Over Activado:", message);
+            gameOver = true; gameRunning = false; gamePaused = true;
+            playSound('explosion');
+
+            // Calcular calificación final del juego
+            const scoreFactor = Math.min(5, Math.floor(score / (800 * level + 1))); // Ajustar divisor
+            const questionAccuracyFactor = totalQuestionsAnsweredGame > 0
+                ? Math.min(5, Math.round((totalQuestionsCorrectGame / totalQuestionsAnsweredGame) * 5))
+                : 2; // Puntaje base si no hubo preguntas
+            const levelFactor = Math.min(5, Math.floor(level / 2)); // Penalizar un poco si no se avanzan muchos niveles
+            const finalRating = Math.max(0, Math.min(5, Math.round(
+                scoreFactor * 0.3 + questionAccuracyFactor * 0.5 + levelFactor * 0.2 // Más peso a preguntas
+            )));
+
+            document.getElementById('final-message').textContent = message;
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('final-level').textContent = level;
+            document.getElementById('final-difficulty').textContent = capitalizeFirst(currentDifficulty);
+            document.getElementById('final-questions-correct-gameover').textContent = totalQuestionsCorrectGame;
+            document.getElementById('final-questions-answered-gameover').textContent = totalQuestionsAnsweredGame;
+            document.getElementById('final-rating-gameover-text').textContent = `${finalRating}/5`;
+            document.getElementById('final-rating-gameover-stars').innerHTML = getRatingStarsHTML(finalRating);
+            document.getElementById('fact-text-gameover').textContent = getRandomFact();
+
+            const highScore = getHighScore(currentDifficulty);
+            const highScoreDisplay = document.getElementById('high-score-display');
+            document.getElementById('high-score-difficulty-gameover').textContent = capitalizeFirst(currentDifficulty);
+            document.getElementById('high-score-gameover').textContent = highScore;
+            if (score > highScore) {
+                saveHighScore(currentDifficulty, score);
+                highScoreDisplay.innerHTML = `🏆 Mejor Score (${capitalizeFirst(currentDifficulty)}): ${score} <span style='color: var(--accent-green);'>(¡NUEVO!)</span>`;
+            } else {
+                 highScoreDisplay.innerHTML = `🏆 Mejor Score (${capitalizeFirst(currentDifficulty)}): ${highScore}`;
+            }
+
+            showModal(gameOverModal);
+            pauseBtn.disabled = true;
+            restartBtnGlobal.disabled = false;
+        }
+
+        function triggerLevelComplete() {
+            if (gameOver || (isModalVisible() && !questionModal.classList.contains('visible'))) return;
+            console.log(`🎉 Nivel ${level} completado!`);
+            gamePaused = true;
+            playSound('correctAnswer'); // Sonido de victoria de nivel
+
+            // Calcular calificación del nivel
+            const questionAccuracyNivel = questionsAnsweredThisLevel > 0
+                ? (questionsCorrectThisLevel / questionsAnsweredThisLevel)
+                : 1; // 100% si no hubo preguntas (raro, pero posible si el target es 0)
+            const livesBonusFactor = Math.min(5, lives * 1.2); // Bonificación por vidas
+            const accuracyFactorNivel = Math.min(5, questionAccuracyNivel * 5);
+
+            const ratingNivel = Math.max(0, Math.min(5, Math.round(
+                accuracyFactorNivel * 0.7 + livesBonusFactor * 0.3 // 70% precisión, 30% vidas
+            )));
+
+            document.getElementById('complete-message').textContent = `¡Fantástico! Has superado el Nivel ${level} 🌟.`;
+            document.getElementById('complete-score').textContent = score;
+            document.getElementById('complete-level').textContent = level;
+            document.getElementById('complete-difficulty').textContent = capitalizeFirst(currentDifficulty);
+            document.getElementById('complete-questions-correct').textContent = questionsCorrectThisLevel;
+            document.getElementById('complete-questions-answered').textContent = questionsAnsweredThisLevel;
+            document.getElementById('complete-rating-text').textContent = `${ratingNivel}/5`;
+            document.getElementById('complete-rating-stars').innerHTML = getRatingStarsHTML(ratingNivel);
+            document.getElementById('fact-text-complete').textContent = getRandomFact();
+
+            const highScore = getHighScore(currentDifficulty);
+            const highScoreDisplayComplete = document.getElementById('high-score-display-complete');
+            document.getElementById('high-score-difficulty-complete').textContent = capitalizeFirst(currentDifficulty);
+            document.getElementById('high-score-complete').textContent = highScore;
+             if (score > highScore) {
+                saveHighScore(currentDifficulty, score);
+                highScoreDisplayComplete.innerHTML = `🏆 Mejor Score (${capitalizeFirst(currentDifficulty)}): ${score} <span style='color: var(--accent-green);'>(¡NUEVO!)</span>`;
+            } else {
+                 highScoreDisplayComplete.innerHTML = `🏆 Mejor Score (${capitalizeFirst(currentDifficulty)}): ${highScore}`;
+            }
+
+            showModal(levelCompleteModal);
+            pauseBtn.disabled = true;
+        }
+
+        function nextLevel() {
+            hideModal(levelCompleteModal);
+            level++; wave = 1;
+            questionsAnsweredThisLevel = 0; questionsCorrectThisLevel = 0;
+            // questionsTarget se mantiene si es por dificultad global, o se recalcula si depende del nivel.
+            // En este caso, questionsTarget es fijo por dificultad al inicio del juego.
+
+            gamePaused = false;
+            setupLevel(); // Configura la nueva grid, etc.
+            console.log(`🚀 Iniciando Nivel ${level}`);
+            lastTime = performance.now();
+            pauseBtn.disabled = false;
+            updateUI();
+        }
+
+        // --- Funciones Auxiliares ---
+        function showModal(modalElement) { modalElement.classList.add('visible'); }
+        function hideModal(modalElement) { modalElement.classList.remove('visible'); }
+        function getHighScore(difficulty) { return parseInt(localStorage.getItem(`invadersFisicaHighScore_${difficulty}`) || '0'); }
+        function saveHighScore(difficulty, newScore) { try { localStorage.setItem(`invadersFisicaHighScore_${difficulty}`, newScore.toString()); } catch (e) { console.error("Error al guardar high score:", e); } }
+        function capitalizeFirst(text) { if (!text) return ''; return text.charAt(0).toUpperCase() + text.slice(1); }
+
+        function resizeCanvas() {
+            const container = document.querySelector('.container');
+            if (!container) return;
+            const containerStyles = getComputedStyle(container);
+            const containerWidth = container.clientWidth - parseInt(containerStyles.paddingLeft) - parseInt(containerStyles.paddingRight);
+            const aspectRatio = 4 / 3;
+            const maxWidth = 700; // Coincide con max-width de .container
+
+            let newWidth = Math.min(containerWidth, maxWidth);
+            let newHeight = newWidth / aspectRatio;
+
+            let heightToSubtract = 80; // Margen base y footer estimado
+            try { // Intentar obtener alturas de UI
+                 heightToSubtract += document.getElementById('global-controls')?.offsetHeight || 0;
+                 heightToSubtract += document.getElementById('ui-bar')?.offsetHeight || 0;
+                 // Solo sumar mobile-controls si está visible
+                 const mc = document.getElementById('mobile-controls');
+                 if (mc && getComputedStyle(mc).display !== 'none') {
+                    heightToSubtract += mc.offsetHeight || 0;
+                 }
+                 heightToSubtract += document.querySelector('footer')?.offsetHeight || 0;
+            } catch (e) { console.warn("Error obteniendo altura de UI para resize:", e); }
+
+            const availableHeight = window.innerHeight - heightToSubtract;
+
+            if (newHeight > availableHeight && availableHeight > 100) { // Mínimo 100px de alto
+                newHeight = availableHeight;
+                newWidth = newHeight * aspectRatio;
+            }
+            newWidth = Math.min(newWidth, containerWidth);
+
+            canvas.width = Math.max(200, Math.floor(newWidth)); // Ancho mínimo
+            canvas.height = Math.max(150, Math.floor(newHeight)); // Alto mínimo
+
+            // Reajustar jugador si existe y el juego está corriendo
+            if (gameRunning && player) {
+                player.baseWidth = canvas.width * 0.055;
+                player.baseHeight = player.baseWidth * 0.85;
+                player.width = player.baseWidth; player.height = player.baseHeight;
+                player.x = Math.max(0, Math.min(player.x, canvas.width - player.width));
+                player.y = canvas.height - player.height - 20; // Reposicionar en base
+            }
+            // Si la grid existe, también podría necesitar reajustar sus dimensiones o las de los invasores,
+            // pero es más complejo y podría implicar reiniciar la grid. Por ahora, se mantiene.
+        }
+
+        function isModalVisible() {
+            return Array.from(document.querySelectorAll('.modal-overlay')).some(modal => modal.classList.contains('visible'));
+        }
+
+        // --- Event Listeners ---
+        window.addEventListener('keydown', (e) => {
+            if (isModalVisible() && e.key !== 'Escape') { // Permitir Esc para cerrar modales si se implementa
+                // Si el modal de pregunta está activo, no bloquear todas las teclas (ej. números para respuestas futuras)
+                if(document.getElementById('question-modal').classList.contains('visible')) {
+                   // Podría haber lógica específica aquí si las preguntas necesitaran input de teclado
+                } else {
+                    return; // Bloquear otras teclas si otros modales están visibles
+                }
+            }
+            keys[e.key] = true;
+            if (gameRunning && [' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                e.preventDefault(); // Prevenir scroll con teclas de juego
+            }
+            if (gameRunning && !isModalVisible()) { // Atajos solo si no hay modal
+                if ((e.key === 'p' || e.key === 'P') && !pauseBtn.disabled) togglePause();
+                if ((e.key === 'r' || e.key === 'R') && !restartBtnGlobal.disabled) restartGame();
+                if ((e.key === 'm' || e.key === 'M')) toggleMute(); // Atajo para mute
+            }
+        });
+        window.addEventListener('keyup', (e) => { keys[e.key] = false; });
+
+        function handleTouchStart(e) {
+             if (isModalVisible()) return;
+             e.preventDefault(); // Prevenir zoom o scroll
+             const target = e.target.closest('.control-btn');
+             if (!target) return;
+
+             const buttonId = target.id.split('-')[0];
+             const keyName = 'touch' + capitalizeFirst(buttonId);
+             keys[keyName] = true;
+             target.classList.add('active-touch');
+
+             // Intentar iniciar/reanudar AudioContext en la primera interacción táctil si es necesario
+            if (soundsEnabled && typeof Tone !== 'undefined' && Tone.context.state === 'suspended') {
+                Tone.start().then(() => {
+                    console.log("🔊 AudioContext iniciado/reanudado por interacción táctil.");
+                    if (!audioInitialized) initializeSounds(); // Asegurarse de que los synths estén listos
+                }).catch(err => console.error("Error iniciando/reanudando AudioContext:", err));
+            }
+        }
+        function handleTouchEnd(e) {
+             // Iterar sobre todos los botones de control táctil para desactivar
+             [leftBtn, rightBtn, shootBtn].forEach(btn => {
+                 const buttonId = btn.id.split('-')[0];
+                 const keyName = 'touch' + capitalizeFirst(buttonId);
+                 if (keys[keyName]) { keys[keyName] = false; btn.classList.remove('active-touch'); }
+             });
+        }
+        [leftBtn, rightBtn, shootBtn].forEach(btn => {
+            btn.addEventListener('touchstart', handleTouchStart, { passive: false });
+        });
+        document.addEventListener('touchend', handleTouchEnd, { passive: false });
+        document.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+
+        pauseBtn.addEventListener('click', togglePause);
+        restartBtnGlobal.addEventListener('click', restartGame);
+
+        document.querySelectorAll('.difficulty-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('selected'));
+                button.classList.add('selected');
+                currentDifficulty = button.dataset.difficulty;
+                console.log(`Dificultad seleccionada: ${currentDifficulty}`);
+            });
+        });
+
+        document.getElementById('start-button').addEventListener('click', () => {
+            const selectedDifficulty = document.querySelector('.difficulty-btn.selected').dataset.difficulty;
+            if (typeof Tone !== 'undefined') {
+                Tone.start().then(() => { // Tone.start() DEBE ser llamado por una interacción del usuario.
+                    console.log("🔊 AudioContext iniciado por botón de Start.");
+                    initializeSounds(); // Ahora inicializamos los synths
+                    initGame(selectedDifficulty);
+                }).catch(e => {
+                    console.warn("No se pudo iniciar AudioContext, iniciando sin sonido:", e);
+                    soundsEnabled = false; muteBtn.textContent = '🔇 Sonido OFF';
+                    initGame(selectedDifficulty);
+                });
+            } else { // Si Tone.js no está cargado
+                initGame(selectedDifficulty);
+            }
+        });
+
+        document.getElementById('help-button').addEventListener('click', () => showModal(helpModal));
+        document.getElementById('close-help-button').addEventListener('click', () => hideModal(helpModal));
+        document.getElementById('restart-button-gameover').addEventListener('click', restartGame);
+        document.getElementById('next-level-button').addEventListener('click', nextLevel);
+        document.getElementById('restart-button-complete').addEventListener('click', restartGame);
+
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('load', () => {
+            resizeCanvas();
+            console.log("🎮 Página cargada y lista. ¡A jugar! ");
+        });
+        resizeCanvas(); // Ajuste inicial
+    </script>
+</body>
+</html>
